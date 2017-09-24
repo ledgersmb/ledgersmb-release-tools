@@ -1,0 +1,20 @@
+#!/bin/sh
+
+
+
+#if [[ -n "$(groups | grep -E '\blibvirtd\b')" ]];
+#then
+  # 1 == false
+#  libvirt_requires_sudo=1
+#else
+  # 0 == true
+#  libvirt_requires_sudo=0
+#fi
+
+#function run_cmd() {
+#  if 
+#}
+
+virsh undefine stretch
+virsh destroy stretch
+virt-install --location http://ftp.us.debian.org/debian/dists/stable/main/installer-i386/ --channel pty,target_type=virtio --initrd-inject=./preseed.cfg "$@"
