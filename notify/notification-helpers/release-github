@@ -1,9 +1,9 @@
-#!/usr/bin/ksh
+#!/bin/bash
 
 set -x
 
 release_version=$1
-release_text=$(cat ~/ledgersmb-release-text | sed -e 's/"/\\"/g' | sed -e 's/\n/\\n/g')
+release_text=$(cat ~/ledgersmb-release-text | sed -e 's/"/\\"/g' | sed -e ':a;N;s/\n/\\n/g;ba')
 
 if [[ ! -f ~/.lsmb-github-releases ]]; then
    fail "Missing configuration file ~/.lsmb-github-releases!"
@@ -21,4 +21,5 @@ gh_auth="-u $github_user:$github_token"
 
 tag_URL=$(curl "$GH_api/releases/tags/$release_version" | jq -M -r '.url')
 
-curl -X PATCH $gh_auth $tag_URL -d "{ \"prerelease\": false, \"draft\": false, \"tag_name\": \"$release_version\", \"body\": \"$release_text\"}" | jq '.body'
+#echo 
+curl -X PATCH $gh_auth $tag_URL -d "{ \"name\": \"$release_version\", \"prerelease\": false, \"draft\": false, \"tag_name\": \"$release_version\", \"body\": \"$release_text\" }"
