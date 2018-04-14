@@ -39,12 +39,53 @@ updateIRC() {
     $basedir/notification-helpers/release-irc.sh $release_type $release_version
 }
 
+composeReleaseStatement() {
+
+    cat >~/ledgersmb-release-text <<-EOF
+	The LedgerSMB development team is happy to announce yet another new
+	version of its open source ERP and accounting application.
+	This release contains the following fixes and improvements:
+
+	$release_changelog
+
+
+	For installation instructions and system requirements, see
+	   https://github.com/ledgersmb/LedgerSMB/blob/$release_version/README.md
+
+	The release can be downloaded from our download site at
+	   https://download.ledgersmb.org/f/Releases/$release_version
+
+	The release can be downloaded from GitHub at
+	   https://github.com/ledgersmb/LedgerSMB/releases/tag/$release_version
+
+	Or pulled from Docker Hub using the command
+	   $ docker pull ledgersmb/ledgersmb:$release_version
+
+	These are the sha256 checksums of the uploaded files:
+
+	$release_sha256sums
+
+EOF
+
+    ${EDITOR:-nano} ~/ledgersmb-release-text
+}
+
+updateGitHub() {
+    $basedir/notification-helpers/release-github $release_version
+}
+
+sendEmail() {
+    $basedir/notification-helpers/release-email.sh;
+}
+
 RunAllUpdates() {
     if ! [[ "$release_type" == "old" ]]; then
         updateWikipedia "$release_version" "$release_date";
         updateIRC;
     fi
-    $basedir/notification-helpers/release-email.sh;
+    composeReleaseStatement;
+    updateGitHub;
+    sendEmail;
 }
 
 
