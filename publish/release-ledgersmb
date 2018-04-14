@@ -388,7 +388,7 @@ For installation instructions and system requirements, see
   https://github.com/ledgersmb/LedgerSMB/blob/$release_version/README.md
 
 The release can be downloaded from our download site at
-  http://download.ledgersmb.org/$dl_base_dir/$prj_url_dir/$release_version
+  https://download.ledgersmb.org/$dl_base_dir/$prj_url_dir/$release_version
 
 The release can be downloaded from GitHub at
   https://github.com/ledgersmb/LedgerSMB/releases/tag/$release_version
