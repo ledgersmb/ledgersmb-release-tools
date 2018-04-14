@@ -356,9 +356,9 @@ echo "
 release_branch=$branch
 release_version=$release_version
 release_date=$($date --iso --utc)
-" > ./ledgersmb-release-parameters
+" > ~/ledgersmb-release-parameters
 
-$cat <<EOT >>./ledgersmb-release-parameters
+$cat <<EOT >> ~/ledgersmb-release-parameters
 release_sha256sums="\$($cat <<'EOF'
 $extracted_sha256sums
 EOF
