@@ -1,0 +1,49 @@
+#!/bin/bash
+
+
+if [[ ! -f ~/.lsmb-site-releases ]]; then
+   fail "Missing configuration file ~/.lsmb-site-releases!"
+else
+   source ~/.lsmb-github-releases
+
+   [[ -n "$site_user" ]] || fail "variable 'site_user' not defined! please define in ~/.lsmb-github-releases"
+   [[ -n "$site_password" ]] || fail "variable 'site_password' not defined! please define in ~/.lsmb-github-releases"
+fi
+
+
+user=$site_user
+password=$site_password
+
+release_version=$1
+release_branch=$2
+
+release_text=$(cat ~/ledgersmb-release-text | sed -e ':a;N;s/\n/\\n/g;ba')
+release_branch_id=$(curl -s -g "https://ledgersmb.org/jsonapi/taxonomy_term/release?filter[title][condition][path]=name&filter[title][condition][operator]==&filter[title][condition][value]=$release_branch" | jq '.data[0].id')
+
+releaseExists() {
+   # prints the number of elements in the array returned searching for "$release_version Released"
+   exists_blob=$(curl -s -g "https://ledgersmb.org/jsonapi/node/release?filter[title][condition][path]=title&filter[title][condition][operator]=CONTAINS&filter[title][condition][value]=${release_version}%20Released")
+
+   echo "$exists_blob" | jq '.data | length'
+}
+
+
+updateRelease() {
+
+   if [[ $(releaseExists) -eq 0 ]]; then
+      METHOD=POST
+      api_url="https://$user:${password}@ledgersmb.org/jsonapi/node/release/"
+   else
+      METHOD=PATCH
+      uuid=$(echo "$exists_blob" | jq '.data[0].id')
+      api_url="https://$user:${password}@ledgersmb.org/jsonapi/node/release/$uuid"
+      has_id="\"id\": \"$uuid\","
+   fi
+
+   curl -H 'Accept: application/vnd.api+json' \
+        -H 'Content-Type: application/vnd.api+json' \
+        -s -X $METHOD $api_url \
+        -d "{ \"data\": { $has_id \"type\": \"node--release\", \"attributes\": { \"title\": \"$release_version Released\", \"field_release_candidate\": false, \"field_security_release\": false, \"body\": { \"format\": \"markdown\", \"value\": \"$release_text\" } }, \"relationships\": { \"field_release\": { \"data\": [ { \"type\": \"taxonomy_term--release\", \"id\": $release_branch_id } ]  }  } } }"
+}
+
+updateRelease;
