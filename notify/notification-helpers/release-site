@@ -1,13 +1,18 @@
 #!/bin/bash
 
+fail() {
+   echo "$@"
+   exit 1
+}
+
 
 if [[ ! -f ~/.lsmb-site-releases ]]; then
    fail "Missing configuration file ~/.lsmb-site-releases!"
 else
-   source ~/.lsmb-github-releases
+   source ~/.lsmb-site-releases
 
-   [[ -n "$site_user" ]] || fail "variable 'site_user' not defined! please define in ~/.lsmb-github-releases"
-   [[ -n "$site_password" ]] || fail "variable 'site_password' not defined! please define in ~/.lsmb-github-releases"
+   [[ -n "$site_user" ]] || fail "variable 'site_user' not defined! please define in ~/.lsmb-site-releases"
+   [[ -n "$site_password" ]] || fail "variable 'site_password' not defined! please define in ~/.lsmb-site-releases"
 fi
 
 
@@ -17,25 +22,26 @@ password=$site_password
 release_version=$1
 release_branch=$2
 
-release_text=$(cat ~/ledgersmb-release-text | sed -e ':a;N;s/\n/\\n/g;ba')
+release_text=$(cat ~/ledgersmb-release-text | sed -e ':a;N;s/\n/\\n/g;ba' | sed -e "s/\(Changelog for $release_version\)/\1\\\\n/")
 release_branch_id=$(curl -s -g "https://ledgersmb.org/jsonapi/taxonomy_term/release?filter[title][condition][path]=name&filter[title][condition][operator]==&filter[title][condition][value]=$release_branch" | jq '.data[0].id')
 
-releaseExists() {
+checkReleaseExists() {
    # prints the number of elements in the array returned searching for "$release_version Released"
    exists_blob=$(curl -s -g "https://ledgersmb.org/jsonapi/node/release?filter[title][condition][path]=title&filter[title][condition][operator]=CONTAINS&filter[title][condition][value]=${release_version}%20Released")
 
-   echo "$exists_blob" | jq '.data | length'
+   release_exists=$(echo "$exists_blob" | jq '.data | length')
 }
 
 
 updateRelease() {
 
-   if [[ $(releaseExists) -eq 0 ]]; then
+   checkReleaseExists;
+   if [[ $release_exists -eq 0 ]]; then
       METHOD=POST
       api_url="https://$user:${password}@ledgersmb.org/jsonapi/node/release/"
    else
       METHOD=PATCH
-      uuid=$(echo "$exists_blob" | jq '.data[0].id')
+      uuid=$(echo "$exists_blob" | jq '.data[0].id' | sed -e 's/"//g')
       api_url="https://$user:${password}@ledgersmb.org/jsonapi/node/release/$uuid"
       has_id="\"id\": \"$uuid\","
    fi
