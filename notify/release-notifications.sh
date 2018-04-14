@@ -2,7 +2,9 @@
 
 # import some functions that we need, like reading values from our config file.
 
-[[ -f ./ledgersmb-release-parameters ]] && source ./ledgersmb-release-parameters
+[[ -f ~/ledgersmb-release-parameters ]] \
+   && source ~/ledgersmb-release-parameters
+
 
 export release_version release_type release_date release_branch
 export release_changelog release_sha256sums
