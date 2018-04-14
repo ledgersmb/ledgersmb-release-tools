@@ -1,6 +1,6 @@
 #!/usr/bin/ksh
 
-set -x
+#set -x
 # automatically convert tag_release to upper case
 typeset -u tag_release
 
