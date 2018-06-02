@@ -296,12 +296,18 @@ verify_dependencies
 verify_release_key
 setup_workspace
 populate_workspace
-populate_docker_workspace
+
+if [[ "$tag_release" == "Y" ]]; then
+  populate_docker_workspace
+fi
 
 if [[ -z "$(cd "$our_workspace/$checkout_dir"; $git tag | grep -E "^$release_version$")" ]]
 then
   update_translations
-  update_dockerfile
+
+  if [[ "$tag_release" == "Y" ]]; then
+    update_dockerfile
+  fi
   detect_current_version
   detect_versionpatch_files
   patch_version "$current_version" "$release_version"
@@ -343,9 +349,9 @@ fi
 prj_url_dir=$(echo "$prj_sub_dir" | sed -e 's/ /%20/g')
                                                                                 # only after we published to GH, update the docker files so they can download
 publish_files_dl
-update_docker_remote
 
 if [[ "$tag_release" == "Y" ]]; then
+    update_docker_remote
     # we can't upload to GitHub if there's no tag...
     publish_files_gh
 fi
