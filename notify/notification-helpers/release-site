@@ -49,7 +49,11 @@ updateRelease() {
    curl -H 'Accept: application/vnd.api+json' \
         -H 'Content-Type: application/vnd.api+json' \
         -s -X $METHOD $api_url \
-        -d "{ \"data\": { $has_id \"type\": \"node--release\", \"attributes\": { \"title\": \"$release_version Released\", \"field_release_candidate\": false, \"field_download\": \"https://download.ledgersmb.org/f/Releases/$release_version/\", \"field_security_release\": false, \"body\": { \"format\": \"markdown\", \"value\": \"$release_text\" } }, \"relationships\": { \"field_release\": { \"data\": [ { \"type\": \"taxonomy_term--release\", \"id\": $release_branch_id } ]  }  } } }"
+        -d "{ \"data\": { $has_id \"type\": \"node--release\", \"attributes\": { \"title\": \"$release_version Released\", \"field_release_candidate\": false, \"field_download\": \"https://download.ledgersmb.org/f/Releases/$release_version/\", \"field_security_release\": false, \"body\": { \"format\": \"markdown\", \"value\": \"$release_text\" } }, \"relationships\": { \"field_release\": { \"data\": [ { \"type\": \"taxonomy_term--release\", \"id\": $release_branch_id } ]  }  } } }" \
+    &> /dev/null || exit 1
 }
 
 updateRelease;
+
+echo "Release posted to ledgersmb.org"
+

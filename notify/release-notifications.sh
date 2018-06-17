@@ -74,6 +74,10 @@ updateGitHub() {
     $basedir/notification-helpers/release-github $release_version
 }
 
+updateSite() {
+    $basedir/notification-helpers/release-site $release_version $release_branch
+}
+
 sendEmail() {
     $basedir/notification-helpers/release-email.sh;
 }
@@ -85,6 +89,7 @@ RunAllUpdates() {
     fi
     composeReleaseStatement;
     updateGitHub;
+    updateSite;
     sendEmail;
 }
 
