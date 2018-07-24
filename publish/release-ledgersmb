@@ -14,7 +14,7 @@ new_dev_version="$3"
 sf_user="$4"
 checkout_dir="LedgerSMB"
 release_key="8DA0AF10"
-dl_base_dir="f/"
+dl_base_dir="/www/vhosts/download.ledgersmb.org/public_html/f/"
 dl_tagged_dir="Releases"
 dl_untagged_dir="Beta Releases"
 tag_release="Y"
@@ -183,7 +183,7 @@ $(cd "$our_workspace/$checkout_dir" && $git diff )
 
 commit_versionupdate() {
    (cd "$our_workspace/$checkout_dir" && \
-    $git commit -am "Update version" ) \
+    $git commit -am "Update version$1" ) \
    || fail "Failed to commit version update patch!"
 }
 
@@ -316,7 +316,9 @@ then
   commit_versionupdate
   commit_versiontag
   patch_version "$release_version" "$new_dev_version"
-  commit_versionupdate
+  commit_versionupdate '
+
+[skip ci]'
 else
   tag_release="N"
 fi
@@ -378,49 +380,12 @@ EOT
 
 
 echo "
-Proposed wording for a release mail:
-
---------------------------------
-Subject: LedgerSMB $release_version released
-
-The LedgerSMB development team is happy to announce yet another new
-version of its open source ERP and accounting application. This release
-contains the following fixes and improvements:
-
-$extracted_changelog
-
-
-For installation instructions and system requirements, see
-  https://github.com/ledgersmb/LedgerSMB/blob/$release_version/README.md
-
-The release can be downloaded from our download site at
-  https://download.ledgersmb.org/$dl_base_dir/$prj_url_dir/$release_version
-
-The release can be downloaded from GitHub at
-  https://github.com/ledgersmb/LedgerSMB/releases/tag/$release_version
-
-Or pulled from Docker Hub using the command
-
-    \$ docker pull ledgersmb/ledgersmb:$release_version
-
-These are the sha256 checksums of the uploaded files:
-$extracted_sha256sums
-
-
---------------------------------
-
-
-All automated steps completed.
-
 Please execute the following steps manually:
 
  * Update the latest version on Wikipedia
    - https://en.wikipedia.org/wiki/Comparison_of_accounting_software
    - https://ru.wikipedia.org/w/index.php?title=%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%82:%D0%98%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B5_%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8/%D0%A1%D0%BF%D0%B8%D1%81%D0%BA%D0%B8/%D0%A1%D0%BF%D0%B8%D1%81%D0%BE%D0%BA_ERP-%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC&action=edit
    - https://en.wikipedia.org/wiki/List_of_ERP_software_packages
- * Publish the release announcement using the 'release' content type
-   on ledgersmb.org (http://ledgersmb.org/node/add/release when logged in)
-   [Note: Don't forget to set the correct branch to '$branch'!]
 "
 
 rm -rf "$our_workspace"
