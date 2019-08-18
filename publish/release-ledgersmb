@@ -14,7 +14,7 @@ new_dev_version="$3"
 sf_user="$4"
 checkout_dir="LedgerSMB"
 release_key="8DA0AF10"
-dl_base_dir="/www/vhosts/download.ledgersmb.org/public_html/f/"
+dl_base_dir="/www/vhosts/download.ledgersmb.org/public_html/f"
 dl_tagged_dir="Releases"
 dl_untagged_dir="Beta Releases"
 tag_release="Y"
@@ -342,8 +342,10 @@ if [[ "$yn" != "Y" ]]; then
 fi
 
 if [[ "$tag_release" == "Y" ]]; then
-    # if we don't have a release tag, be sure to discard it!
     update_remote
+fi
+
+if [[ -z $(echo "$release_version" | grep -- "-") ]]; then
     prj_sub_dir="$dl_tagged_dir"
 else
     prj_sub_dir="$dl_untagged_dir"
