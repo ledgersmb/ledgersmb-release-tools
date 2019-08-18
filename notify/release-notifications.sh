@@ -83,8 +83,8 @@ sendEmail() {
 }
 
 RunAllUpdates() {
-    if ! [[ "$release_type" == "old" ]]; then
-        updateWikipedia "$release_version" "$release_date";
+    if ! [[ "$release_type" == "oldstable" ]]; then
+        #updateWikipedia "$release_version" "$release_date";
         updateIRC;
     fi
     composeReleaseStatement;
