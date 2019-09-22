@@ -119,7 +119,8 @@ update_translations() {
 
 update_dockerfile() {
    (cd "$docker_workspace/docker" && \
-    $sed -i -e "s/^ENV LSMB_VERSION .*\$/ENV LSMB_VERSION $release_version/" Dockerfile && \
+    $sed -i -e "s/^ENV LSMB_VERSION .*\$/ENV LSMB_VERSION $release_version/
+                s/^ARG LSMB_VERSION=.*\$/ARG LSMB_VERSION=\"$release_version\"/" Dockerfile && \
     $git commit -a -m "* Automatic Dockerfile update by release process" && \
     $git tag "$release_version") \
    || fail "Failed to update Dockerfile!"
