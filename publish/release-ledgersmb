@@ -144,7 +144,7 @@ version_to_regex() {
 
 detect_versionpatch_files() {
    versionpatch_regex=$(version_to_regex "$current_version")
-   versionpatch_files=$(grep -lRE "$versionpatch_regex" "$our_workspace/$checkout_dir" | grep -v Changelog)
+   versionpatch_files=$(grep -lRE "$versionpatch_regex" "$our_workspace/$checkout_dir" | grep -v Changelog | grep -v sql/changes/)
    if [[ -z "$versionpatch_regex" || -z "$versionpatch_files" ]]; then
      fail "Failed to detect which files to patch for version update!"
    fi
