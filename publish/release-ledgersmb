@@ -155,6 +155,8 @@ patch_version() {
    new_version=$2
    $sed -i -e "s/$version_regex/$new_version/" $versionpatch_files \
    || fail "Failed to patch files for version update!"
+   $sed -i -e "s/\"Project-Id-Version:.*/\"Project-Id-Version: LedgerSMB $new_version\"/" "$our_workspace/$checkout_dir/locale/po"/*.po \
+   || fail "Failed to patch PO files for version update!"
 }
 
 show_release_parameters() {
