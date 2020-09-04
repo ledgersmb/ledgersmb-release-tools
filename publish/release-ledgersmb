@@ -4,6 +4,11 @@
 # automatically convert tag_release to upper case
 typeset -u tag_release
 
+if [[ "$1" == "--force-accept-version-update" ]]; then
+   shift
+   force_accept_version_update=yes
+fi
+
 URL="git@github.com:ledgersmb/LedgerSMB.git"
 URL_docker="git@github.com:ledgersmb/ledgersmb-docker.git"
 GH_api="https://api.github.com/repos"
@@ -122,7 +127,8 @@ update_translations() {
 update_dockerfile() {
    (cd "$docker_workspace/docker" && \
     $sed -i -e "s/^ENV LSMB_VERSION .*\$/ENV LSMB_VERSION $release_version/
-                s/^ARG LSMB_VERSION=.*\$/ARG LSMB_VERSION=\"$release_version\"/" Dockerfile && \
+                s/^ARG LSMB_VERSION=.*\$/ARG LSMB_VERSION=\"$release_version\"/
+                s/^ARG LSMB_DL_DIR=.*\$/ARG LSMB_DL_DIR=\"$prj_sub_dir\"/ " Dockerfile && \
     $git commit -a -m "* Automatic Dockerfile update by release process" && \
     $git tag "$release_version") \
    || fail "Failed to update Dockerfile!"
@@ -173,6 +179,7 @@ Git URL: $URL
 Branch: $branch
 Current version: $current_version
 To be released: $release_version
+Force-accept version update: $force_accept_version_update
 
 Git config used for tag:
 $($git config --list | $grep -E 'user.(email|name)')
@@ -189,6 +196,7 @@ $(cd "$our_workspace/$checkout_dir" && $git diff )
 commit_versionupdate() {
    (cd "$our_workspace/$checkout_dir" && \
     $git commit -am "Update version$1" ) \
+   || [[ -n "$force_accept_version_update" ]] \
    || fail "Failed to commit version update patch!"
 }
 
@@ -306,6 +314,11 @@ if [[ "$tag_release" == "Y" ]]; then
   populate_docker_workspace
 fi
 
+if [[ -z $(echo "$release_version" | grep -- "-") ]]; then
+    prj_sub_dir="$dl_tagged_dir"
+else
+    prj_sub_dir="$dl_untagged_dir"
+fi
 if [[ -z "$(cd "$our_workspace/$checkout_dir"; $git tag | grep -E "^$release_version$")" ]]
 then
   update_translations
@@ -350,11 +363,6 @@ if [[ "$tag_release" == "Y" ]]; then
     update_remote
 fi
 
-if [[ -z $(echo "$release_version" | grep -- "-") ]]; then
-    prj_sub_dir="$dl_tagged_dir"
-else
-    prj_sub_dir="$dl_untagged_dir"
-fi
 prj_url_dir=$(echo "$prj_sub_dir" | sed -e 's/ /%20/g')
                                                                                 # only after we published to GH, update the docker files so they can download
 publish_files_dl
