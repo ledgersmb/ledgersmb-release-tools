@@ -27,7 +27,7 @@ makes for an easier solution through VMs.
 ./run
 ./prep
 # <do the release>
-rm -rf ./tmp
+./clean
 
 ```
 
