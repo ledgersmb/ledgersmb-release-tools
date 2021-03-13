@@ -5,6 +5,8 @@ hostname releaser.local
 run-command fstrim -a -v
 
 install curl,dhcpcd5,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils
+copy-in ./files/motd:/etc/
+
 
 run-command pip3 install transifex-client
 run-command pip3 install --upgrade urllib3
