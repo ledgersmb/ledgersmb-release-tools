@@ -1,8 +1,6 @@
 #!/bin/bash
 
 
-./build
-
 virt-install \
     --import \
     --name releaser \
@@ -14,4 +12,4 @@ virt-install \
     --os-type=generic
 
 virsh destroy releaser
-virsh undefine release
+virsh undefine releaser
