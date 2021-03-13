@@ -18,13 +18,6 @@
 ############
 
 
-# NOTE: envsubst allows variables in a stored string to be substituted.
-#       eg:
-#          _TOPIC="$(envsubst '$Version_Stable:$Version_Preview' <<<$TOPIC_template)"
-#       The variables must have been exported.
-#       The : seperated list if supplied limits what substitutions can occur
-
-############
 ############
 # Enable extended globbing. things like *(<Pattern>) to match zero or more instances of pattern.
 # this is normally enabled anyway. but force it as we rely on it for correct processing.
@@ -327,19 +320,5 @@ EOF
     [[ -z $COLUMNS ]] && COLUMNS=`tput cols`;
     export COLUMNS;
     loadConfig;
-
-############
-# Some tests that you can run
-############
-
-#dump_cfgValue_array;
-############
-# initialise the library
-############
-# nothing to do here yet
-
-############
-# Some tests that you can run
-############
 
 #
