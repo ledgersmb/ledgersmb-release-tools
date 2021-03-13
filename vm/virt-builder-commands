@@ -23,9 +23,13 @@ run-command apt-key add /etc/apt/trusted.gpg.d/postgresql-key.asc
 copy-in ./files/nodesource.list:/etc/apt/sources.list.d/
 copy-in ./files/nodesource.asc:/etc/apt/trusted.gpg.d/
 run-command apt-key add /etc/apt/trusted.gpg.d/nodesource.asc
+copy-in ./files/docker.list:/etc/apt/sources.list.d/
+copy-in ./files/docker.asc:/etc/apt/trusted.gpg.d/
+run-command apt-key add /etc/apt/trusted.gpg.d/docker.asc
+
 
 update
-install postgresql-13,npm
+install postgresql-13,npm,docker-ce
 
 # Java JRE is required for building Dojo on 1.4 and 1.5
 install default-jre-headless
@@ -40,7 +44,7 @@ append-line /etc/ssh/sshd_config:StreamLocalBindUnlink yes
 # make sure the dhcp deamon starts ; it fails when 'interfaces' exists
 run-command rm /etc/network/interfaces
 run-command adduser releaser ; \
-            usermod -a -G kvm releaser \
+            usermod -a -G kvm,docker releaser \
             mkdir /home/releaser/.ssh /home/releaser/.gnupg
 copy-in ./tmp/authorized_keys:/home/releaser/.ssh
 copy-in ./files/gnupg.conf:/home/releaser/.gnupg
