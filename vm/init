@@ -1,33 +1,132 @@
 #!/bin/bash
 
 
+function help {
+    cat - <<EOF
+Usage: $0 [option ...]
+
+Generates a configuration file for LedgerSMB's release platform builder
+
+Supported options:
+
+  --defaults          pass this option to prevent this help text
+                      when no options are required
+  --force             overwrite existing configuration file
+  --mail <address>    e-mail address to be used for git and
+                      announcement mail 'From:'
+  --mail-host <name>  use named server as smarthost
+  --mail-pass <pass>  use password 'pass' to authenticate with smarthost
+  --mail-port <port>  use named port (on the smarthost) for sending mail
+  --mail-starttls     use TLS (through STARTTLS) for sending mail
+  --mail-tls          use TLS (but not STARTTLS) for sending mail
+  --name <name>       name to be used for git and announcement
+                      mail 'From:'
+  --user <username>   username to be used for Docker, GitHub, IRC
+                      and Wikipedia
+
+EOF
+
+    exit 1
+}
+
+if [[ $# -eq 0 ]]
+then
+    help
+fi
+
+mail="rm@example.com"
+name="Release Manager"
+user="John"
+force=0
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+
+    case $key in
+        --defaults)
+            shift
+            ;;
+        --force)
+            shift
+            force=1
+            ;;
+        --mail)
+            mail="$2"
+            shift; shift;
+            ;;
+        --mail-host)
+            mail_host="$2"
+            shift; shift;
+            ;;
+        --mail-pass)
+            mail_pass="$2"
+            shift; shift;
+            ;;
+        --mail-port)
+            mail_port="$2"
+            shift; shift;
+            ;;
+        --mail-starttls)
+            mail_tls=Y;
+            mail_starttls=Y;
+            shift;
+            ;;
+        --mail-tls)
+            mail_tls=Y;
+            shift;
+            ;;
+        --name)
+            name="$2"
+            shift; shift;
+            ;;
+        --user)
+            user="$2"
+            shift; shift;
+            ;;
+        *)
+            echo "Error: Unknown option $1"
+            echo ""
+            help
+            ;;
+    esac
+done
+
+if [ -f releaser.conf ] && [[ $force -eq 0 ]]
+then
+    echo "Can't overwrite existing configuration: no --force"
+    exit 2
+fi
+
+
 # declare default values for configuration generation
 
 declare -A conf=(
-    [EmailServer]=example.com
-    [EmailPort]=25
-    [EmailTLS]=N
-    [EmailSTARTTLS]=N
-    [EmailUser]=John
-    [EmailPassword]=Doe
-    [EmailFrom]="ReleaseManager <rm@example.com>"
-    [EmailCmd]="/usr/lib/sendmail -f rm@example.com -t"
+    [DockerUser]="$user"
+    [DockerPassword]=None
 
-    [GitUsername]="John Doe"
-    [GitUsermail]="john@example.com"
+    [EmailServer]="$mail_host"
+    [EmailPort]="$mail_port"
+    [EmailTLS]="$mail_tls"
+    [EmailSTARTTLS]="$mail_starttls"
+    [EmailUser]="$user"
+    [EmailPassword]="$mail_pass"
+    [EmailFrom]="$name <$mail>"
+    [EmailCmd]="/usr/lib/sendmail -f $mail -t"
+
+    [GitUsername]="$name"
+    [GitUsermail]="$mail"
 
     [GithubToken]=None
-    [GithubUser]=None
+    [GithubUser]="$user"
 
-    [SiteUser]=LedgerSMB_Team
     [SitePassword]=None
 
     [IrcServer]=chat.freenode.net
     [IrcPort]=6667
-    [IrcUser]=John
+    [IrcUser]="$user"
     [IrcPassword]=Doe
 
-    [WikipediaUser]=John
+    [WikipediaUser]="$user"
     [WikipediaPassword]=Doe
 )
 
@@ -44,3 +143,7 @@ function generate_config {
 
 generate_config
 
+cat - releaser.conf <<EOF
+Configuration generated in 'releaser.conf' (adjust manually):
+
+EOF
