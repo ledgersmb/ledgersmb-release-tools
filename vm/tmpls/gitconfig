@@ -1,0 +1,5 @@
+[user]
+	email = @RELMAN_GIT_EMAIL@
+	name = @RELMAN_GIT_NAME@
+[push]
+	default = simple

@@ -1,20 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 
+set -e
+set -x
 
+verbose=
+#--verbose
 
-#if [[ -n "$(groups | grep -E '\blibvirtd\b')" ]];
-#then
-  # 1 == false
-#  libvirt_requires_sudo=1
-#else
-  # 0 == true
-#  libvirt_requires_sudo=0
-#fi
+[[ -d ./tmp/ ]] || mkdir ./tmp
+ssh-add -L > ./tmp/authorized_keys
+virt-builder $verbose \
+     -o ./tmp/releaser.qcow2 \
+     --format qcow2 \
+     --arch amd64 \
+     --size 20G \
+     --commands-from-file virt-builder-commands \
+     debian-9
 
-#function run_cmd() {
-#  if 
-#}
-
-virsh undefine stretch
-virsh destroy stretch
-virt-install --location http://ftp.us.debian.org/debian/dists/stable/main/installer-i386/ --channel pty,target_type=virtio --initrd-inject=./preseed.cfg "$@"
