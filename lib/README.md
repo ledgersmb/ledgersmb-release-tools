@@ -1,14 +1,6 @@
-# ledgersmb-release-scripts
-Tools to assist LedgerSMB users and developers
 
-######Copyright (c) 20115, 2016, 2017 LedgerSMB Project
-######Written by SB Tech Services info@sbts.com.au
+# bash-functions.sh
 
-For more information about any of these files, Read The Source Luke
-
-============================
-bash-functions.sh
-============================
     A library of functions that are common to most of the scripts
 
     If you are intending to use the config file functiions
