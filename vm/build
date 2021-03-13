@@ -1,5 +1,19 @@
 #!/bin/bash
 
+declare -A conf
+source releaser.conf
+
+function substitute_config {
+    infile=$1
+    outfile=$(echo $infile | sed -e 's,^tmpls/,tmp/,')
+    cp $infile $outfile
+    for key in "${!conf[@]}"
+    do
+        val=$(echo "${conf[$key]}" | sed -e 's,/,\\/,g')
+        sed -i -e "s/@@$key@@/$val/g" $outfile
+    done
+}
+
 set -e
 set -x
 
@@ -8,6 +22,10 @@ verbose=
 
 [[ -d ./tmp/ ]] || mkdir ./tmp
 ssh-add -L > ./tmp/authorized_keys
+for f in $(find tmpls/ -type f)
+do
+    substitute_config $f
+done
 virt-builder $verbose \
      -o ./tmp/releaser.qcow2 \
      --format qcow2 \

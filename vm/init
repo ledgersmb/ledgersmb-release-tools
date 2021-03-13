@@ -1,0 +1,46 @@
+#!/bin/bash
+
+
+# declare default values for configuration generation
+
+declare -A conf=(
+    [EmailServer]=example.com
+    [EmailPort]=25
+    [EmailTLS]=N
+    [EmailSTARTTLS]=N
+    [EmailUser]=John
+    [EmailPassword]=Doe
+    [EmailFrom]="ReleaseManager <rm@example.com>"
+    [EmailCmd]="/usr/lib/sendmail -f rm@example.com -t"
+
+    [GitUsername]="John Doe"
+    [GitUsermail]="john@example.com"
+
+    [GithubToken]=None
+    [GithubUser]=None
+
+    [SiteUser]=LedgerSMB_Team
+    [SitePassword]=None
+
+    [IrcServer]=chat.freenode.net
+    [IrcPort]=6667
+    [IrcUser]=John
+    [IrcPassword]=Doe
+
+    [WikipediaUser]=John
+    [WikipediaPassword]=Doe
+)
+
+function generate_config {
+    # generate config file
+    for key in "${!conf[@]}"
+    do
+        val=$(echo ${conf[$key]} | sed -e 's/\(["'\''\`\$]\)/\\\1/g' )
+        echo "conf[$key]=\"$val\""
+    done | sort > releaser.conf
+}
+
+
+
+generate_config
+
