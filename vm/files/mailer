@@ -180,7 +180,7 @@ use MIME::Parser;
 my $parser = MIME::Parser->new;
 my $entity = $parser->parse(\*STDIN) or die "Failed to parse e-mail input\n";
 my $head   = $entity->head;
-my $body   = $entity->body;
+my $body   = $entity->bodyhandle;
 LedgerSMB::Mailer->new(
     from    => $head->get('From'),
     to      => $head->get('To'),
