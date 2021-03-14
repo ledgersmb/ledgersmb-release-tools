@@ -1,0 +1,191 @@
+#!/usr/bin/perl
+
+package LedgerSMB::Mailer::TransportSMTP {
+
+    use strict;
+    use warnings;
+
+    use Moo;
+    use MooX::Types::MooseLike::Base qw(:all);
+
+    extends 'Email::Sender::Transport::SMTP';
+
+    has '+sasl_username' => (isa => AnyOf[ Str, InstanceOf['Authen::SASL']]);
+
+}
+
+package LedgerSMB::Mailer {
+
+    use warnings;
+    use strict;
+
+    use Authen::SASL;
+    use Digest::MD5 qw(md5_hex);
+    use Email::Sender::Simple;
+    use Email::Stuffer;
+
+    sub new {
+        my $type = shift;
+        my $self = {};
+        bless $self, $type;
+
+        $self->prepare_message(@_) if @_;
+
+        return $self;
+    }
+
+    sub prepare_message {
+        my $self = shift;
+        my %args = @_;
+
+        # Populate message fields
+        for my $key (keys %args) {
+            $self->{$key} = $args{$key};
+        }
+        die 'No email from address' unless $self->{from};
+
+        $self->{contenttype} = 'text/plain' unless $self->{contenttype};
+
+        for (qw(from to cc subject)) {
+            next unless $self->{$_};
+            $self->{$_} =~ s/(\/|\\|\$)//g;
+            $self->{$_} =~ s/([\n\r\f])/$1 /g;
+        }
+
+        $self->{_message} = Email::Stuffer
+            ->from( $self->{from} )
+            ->to( $self->{to} )
+            ->subject( $self->{subject} )
+            ->text_body( $self->{message},
+                         encoding => '8bit',
+                         content_type => $self->{contenttype},
+                         charset => 'UTF-8' )
+            ->header( 'Message-ID' => $self->generate_message_id );
+
+        $self->{_message}->cc( $self->{cc} ) if $self->{cc};
+
+        return;
+    }
+
+
+    sub generate_message_id {
+
+        my $self = shift;
+        my $domain = $self->{from};
+        $domain =~ s/(.*?\@|>)//g;
+
+        # Make sure we generate a message id which has sufficient chance
+        # of being unique. Note that the purpose of MD5 here isn't to be
+        # cryptographically secure; it's a hash which provides sufficient
+        # distribution across the number space.
+        my $msg_random = md5_hex(
+            'From' => $self->{from},
+            'To' => $self->{to} // '',
+            'Cc' => $self->{cc} // '',
+            'Bcc' => $self->{bcc} // '',
+            'Subject' => $self->{subject} // '',
+            # To get better distribution, also take non-message related
+            # components into account: time, pid and a random number
+            'Date/Time' => time,
+            'Process-id' => $$,
+            'Random-component' => rand(),
+            );
+        my $msg_id = "<LSMB-$msg_random\@$domain>";
+
+        return $msg_id;
+    }
+
+    sub send {
+        my $self = shift;
+
+        $self->{_message}->header(
+            'X-Mailer' => 'LedgerSMB release mailer 1.0.0' );
+        local $@ = undef;
+        eval {
+            my @transport;
+            if ($ENV{SMTP_HOST}) {
+                my @options;
+
+                push @options,
+                    host => $ENV{SMTP_HOST};
+
+                if ($ENV{SMTP_PORT}) {
+                    push @options,
+                        port => $ENV{SMTP_PORT};
+                }
+
+                if ($ENV{SMTP_USER}) {
+                    my $auth = Authen::SASL->new(
+                        mechanism => $ENV{SMTP_AUTHMECH},
+                        callback => {
+                            user => $ENV{SMTP_USER},
+                            pass => $ENV{SMTP_PASS},
+                        });
+                    push @options,
+                        sasl_username => $auth,
+                        sasl_password => '';
+                }
+
+                if ($ENV{SMTP_TIMEOUT}) {
+                    push @options, timeout => $ENV{SMTP_TIMEOUT};
+                }
+
+                my $tls = $ENV{SMTP_TLS};
+                if ($tls and $tls ne 'no') {
+                    if ($tls eq 'yes') {
+                        push @options, ssl => 'starttls';
+                    }
+                    elsif ($tls eq 'tls') {
+                        push @options, ssl => 'ssl';
+                    }
+                }
+
+                if ($ENV{SMTP_HELO}) {
+                    push @options,
+                        helo => $ENV{SMTP_HELO};
+                }
+
+                @transport = (
+                    transport =>
+                       LedgerSMB::Mailer::TransportSMTP->new(@options),
+                    );
+            }
+
+            # On failure, send() throws an exception
+            if ($self->{bcc}) {
+                Email::Sender::Simple->send(
+                    $self->{_message}->email,
+                    {
+                        to => $self->{bcc},
+                        @transport,
+                    });
+            }
+            Email::Sender::Simple->send(
+                $self->{_message}->email,
+                {
+                    @transport,
+                });
+        };
+        die "Could not send email: $@.  Please check your configuration." if $@;
+        return;
+    }
+
+}
+
+use strict;
+use warnings;
+
+use MIME::Parser;
+
+my $parser = MIME::Parser->new;
+my $entity = $parser->parse(\*STDIN) or die "Failed to parse e-mail input\n";
+my $head   = $entity->head;
+my $body   = $entity->body;
+LedgerSMB::Mailer->new(
+    from    => $head->get('From'),
+    to      => $head->get('To'),
+    subject => $head->get('Subject'),
+    body    => $body->as_string,
+    )->send;
+
+exit 0;

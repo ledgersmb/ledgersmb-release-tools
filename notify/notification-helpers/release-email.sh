@@ -20,9 +20,6 @@ libFile=$basedir/../../lib/bash-functions.sh
 createEmail() {
     prj_url_dir='Releases'
     if [[ $release_type == preview ]]; then prj_url_dir='Beta%20Releases'; fi
-    #HTML email is possible. Just add these lines after the subject:
-    #Mime-Version: 1.0
-    #Content-type: text/html; charset=”iso-8859-1″
     cat <<-EOF >/tmp/msg.txt
 	To: $1
 	From: ${cfgValue[mail_FromAddress]}
@@ -37,30 +34,12 @@ EOF
 
 sendEmail() {
     Sender=${EMAIL};
-    [[ -n $EMAIL ]] && scrape_config_files_for_Sender;
-
-    MTA="${cfgValue[mail_MTAbinary]}";
-    [[ -z $MTA ]] && MTA=`which ssmtp`;
-    [[ -z $MTA ]] && MTA=`which sendmail`;
-    [[ -x `which $MTA` ]] || { echo "Exiting: No Known MTA"; exit 1; }
-
     local defaultRecipient="${cfgValue[mail_FromAddress]}"
 
-    if [[ $MTA =~ ssmtp ]] && [[ $MTA =~ '-t' ]]; then # ssmtp can't handle a commandline recipient if -t is used
-        unset defaultRecipient;
-    fi
-
     if createEmail "${cfgValue[mail_AnnounceList]}, ${cfgValue[mail_UsersList]}, ${cfgValue[mail_DevelList]}"; then
-        $MTA "$defaultRecipient" < /tmp/msg.txt
+        $HOME/bin/mailer < /tmp/msg.txt
     fi
 
-#    if createEmail "${cfgValue[mail_UsersList]}"; then
-#        $MTA "$defaultRecipient" < /tmp/msg.txt
-#    fi
-
-#    if createEmail "${cfgValue[mail_DevelList]}"; then
-#        $MTA "$defaultRecipient" < /tmp/msg.txt
-#    fi
 }
 
 RunAllUpdates() {

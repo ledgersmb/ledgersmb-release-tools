@@ -111,7 +111,6 @@ declare -A conf=(
     [EmailUser]="$user"
     [EmailPassword]="$mail_pass"
     [EmailFrom]="$name <$mail>"
-    [EmailCmd]="/usr/lib/sendmail -f $mail -t"
 
     [GitUsername]="$name"
     [GitUsermail]="$mail"

@@ -6,7 +6,7 @@ run-command fstrim -a -v
 
 copy-in ./files/00recommended:/etc/apt/apt.conf.d/
 
-install curl,dhcpcd5,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,dma,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl
+install curl,dhcpcd5,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl,libmime-tools-perl,libemail-sender-perl,libemail-stuffer-perl,libauthen-sasl-perl
 copy-in ./files/motd:/etc/
 
 
@@ -45,15 +45,17 @@ append-line /etc/ssh/sshd_config:StreamLocalBindUnlink yes
 run-command rm /etc/network/interfaces
 run-command adduser releaser ; \
             usermod -a -G kvm,docker releaser \
-            mkdir /home/releaser/.ssh /home/releaser/.gnupg
+            mkdir /home/releaser/.ssh /home/releaser/.gnupg /home/releaser/bin
+copy-in ./files/mailer:/home/releaser/bin
 copy-in ./tmp/authorized_keys:/home/releaser/.ssh
 copy-in ./files/gnupg.conf:/home/releaser/.gnupg
 upload ./files/ssh-config:/home/releaser/.ssh/config
-
-
+upload ./tmp/dot-lsmb-release:/home/releaser/.lsmb-release
+upload ./tmp/dot-lsmb-site-releases:/home/releaser/.lsmb-site-releases
+upload ./tmp/dot-lsmb-github-releases:/home/releaser/.lsmb-github-releases
 
 run-command \
-   chown -R releaser:releaser /home/releaser/.ssh /home/releaser/.gnupg ; \
-   chmod -R u=rwX,go= /home/releaser/.ssh /home/releaser/.gnupg
-
+   chown -R releaser:releaser /home/releaser/.ssh /home/releaser/.gnupg /home/releaser/.lsmb-release /home/releaser/.lsmb-github-releases /home/releaser/.lsmb-site-releases /home/releaser/bin; \
+   chmod -R u=rwX,go= /home/releaser/.ssh /home/releaser/.gnupg /home/releaser/.lsmb-release /home/releaser/.lsmb-github-releases /home/releaser/.lsmb-site-releases ; \
+   chmod +x /home/releaser/bin/mailer
 
