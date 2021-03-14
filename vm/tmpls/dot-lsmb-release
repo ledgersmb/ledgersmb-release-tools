@@ -3,7 +3,13 @@ FromAddress  = @@EmailFrom@@
 AnnounceList = ledger-smb-announce@lists.sourceforge.net
 UsersList    = ledger-smb-users@lists.sourceforge.net
 DevelList    = ledger-smb-devel@lists.sourceforge.net
-MTAbinary    = @@EmailCmd@@
+Server       = @@EmailServer@@
+Port         = @@EmailPort@@
+Password     = @@EmailPassword@@
+User         = @@EmailUser@@
+AuthMech     = @@EmailAUTHMECH@@
+TLS          = @@EmailTLS@@
+# SMTP_TIMEOUT and SMTP_HELO not supported at the moment.
 
 [irc]
 Server              = chat.freenode.net

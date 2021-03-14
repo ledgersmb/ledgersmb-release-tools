@@ -14,11 +14,14 @@ Supported options:
   --force             overwrite existing configuration file
   --mail <address>    e-mail address to be used for git and
                       announcement mail 'From:'
+  --mail-authmech     lists supported auth mechanisms
+                      (default PLAIN LOGIN CRAM-MD5)
   --mail-host <name>  use named server as smarthost
   --mail-pass <pass>  use password 'pass' to authenticate with smarthost
   --mail-port <port>  use named port (on the smarthost) for sending mail
   --mail-starttls     use TLS (through STARTTLS) for sending mail
   --mail-tls          use TLS (but not STARTTLS) for sending mail
+  --mail-notls        do not use TLS for sending mail
   --name <name>       name to be used for git and announcement
                       mail 'From:'
   --user <username>   username to be used for Docker, GitHub, IRC
@@ -37,6 +40,8 @@ fi
 mail="rm@example.com"
 name="Release Manager"
 user="John"
+mail_tls=yes
+authmech="PLAIN LOGIN CRAM-MD5"
 force=0
 while [[ $# -gt 0 ]]
 do
@@ -54,6 +59,10 @@ do
             mail="$2"
             shift; shift;
             ;;
+        --mail-authmech)
+            authmech="$2"
+            shift; shift;
+            ;;
         --mail-host)
             mail_host="$2"
             shift; shift;
@@ -67,12 +76,15 @@ do
             shift; shift;
             ;;
         --mail-starttls)
-            mail_tls=Y;
-            mail_starttls=Y;
+            mail_tls=starttls;
+            shift;
+            ;;
+        --mail-notls)
+            mail_tls=no
             shift;
             ;;
         --mail-tls)
-            mail_tls=Y;
+            mail_tls=tls;
             shift;
             ;;
         --name)
@@ -104,10 +116,10 @@ declare -A conf=(
     [DockerUser]="$user"
     [DockerPassword]=None
 
+    [EmailAUTHMECH]="$authmech"
     [EmailServer]="$mail_host"
     [EmailPort]="$mail_port"
     [EmailTLS]="$mail_tls"
-    [EmailSTARTTLS]="$mail_starttls"
     [EmailUser]="$user"
     [EmailPassword]="$mail_pass"
     [EmailFrom]="$name <$mail>"
@@ -120,8 +132,6 @@ declare -A conf=(
 
     [SitePassword]=None
 
-    [IrcServer]=chat.freenode.net
-    [IrcPort]=6667
     [IrcUser]="$user"
     [IrcPassword]=Doe
 

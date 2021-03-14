@@ -37,7 +37,10 @@ sendEmail() {
     local defaultRecipient="${cfgValue[mail_FromAddress]}"
 
     if createEmail "${cfgValue[mail_AnnounceList]}, ${cfgValue[mail_UsersList]}, ${cfgValue[mail_DevelList]}"; then
-        $HOME/bin/mailer < /tmp/msg.txt
+        SMTP_HOST="${cfgValue[mail_Server]}" SMTP_PORT="${cfgValue[mail_Port]}" \
+                 SMTP_USER="$cfgValue[mail_User]" SMTP_PASS="$cfgValue[mail_Password]" \
+                 SMTP_AUTHMECH="$cfgValue[AuthMech]" SMTP_TLS="$cfgValue[mail_TLS]" \
+                 $HOME/bin/mailer < /tmp/msg.txt
     fi
 
 }
