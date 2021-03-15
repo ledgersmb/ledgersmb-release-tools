@@ -55,8 +55,13 @@ do
             shift
             force=1
             ;;
+        --git-mail)
+            git_mail="$2"
+            shift; shift;
+            ;;
         --mail)
             mail="$2"
+            git_mail=${git_mail:?${mail}}
             shift; shift;
             ;;
         --mail-authmech)
@@ -130,13 +135,16 @@ declare -A conf=(
     [GithubToken]=None
     [GithubUser]="$user"
 
-    [SitePassword]=None
-
     [IrcUser]="$user"
     [IrcPassword]=Doe
 
-    [WikipediaUser]="$user"
+    [SitePassword]=None
+
+    [TransifexPassword]=None
+    [TransifexUser]="$user"
+
     [WikipediaPassword]=Doe
+    [WikipediaUser]="$user"
 )
 
 function generate_config {
