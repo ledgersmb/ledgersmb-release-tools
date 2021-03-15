@@ -9,8 +9,6 @@ ssh-keyscan releaser.local >>~/.ssh/known_hosts
 gpg_local_socket=$(gpgconf --list-dir agent-extra-socket)
 gpg_remote_socket=$(ssh releaser@releaser.local gpgconf --list-dir agent-socket)
 
-scp ~/.transifexrc releaser@releaser.local:.transifexrc
-scp ~/.gitconfig releaser@releaser.local:.gitconfig
 ssh releaser@releaser.local gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys B7626A90FA0F515B323C8F5C39A629558DA0AF10
 ssh releaser@releaser.local "ssh-keyscan github.com > ~/.ssh/known_hosts"
 ssh releaser@releaser.local "touch ledgersmb-release-tools ; rm -rf ledgersmb-release-tools"

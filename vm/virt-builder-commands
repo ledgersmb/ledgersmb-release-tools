@@ -49,13 +49,20 @@ run-command adduser releaser ; \
 copy-in ./files/mailer:/home/releaser/bin
 copy-in ./tmp/authorized_keys:/home/releaser/.ssh
 copy-in ./files/gnupg.conf:/home/releaser/.gnupg
+upload ./tmp/gitconfig:/home/releaser/.gitconfig
 upload ./files/ssh-config:/home/releaser/.ssh/config
 upload ./tmp/dot-lsmb-release:/home/releaser/.lsmb-release
 upload ./tmp/dot-lsmb-site-releases:/home/releaser/.lsmb-site-releases
 upload ./tmp/dot-lsmb-github-releases:/home/releaser/.lsmb-github-releases
+upload ./tmp/dot-transifexrc:/home/releaser/.transifexrc
 
 run-command \
-   chown -R releaser:releaser /home/releaser/.ssh /home/releaser/.gnupg /home/releaser/.lsmb-release /home/releaser/.lsmb-github-releases /home/releaser/.lsmb-site-releases /home/releaser/bin; \
-   chmod -R u=rwX,go= /home/releaser/.ssh /home/releaser/.gnupg /home/releaser/.lsmb-release /home/releaser/.lsmb-github-releases /home/releaser/.lsmb-site-releases ; \
+   chown -R releaser:releaser /home/releaser/.ssh /home/releaser/.gnupg \
+             /home/releaser/.lsmb-release /home/releaser/.lsmb-github-releases \
+             /home/releaser/.lsmb-site-releases /home/releaser/bin \
+             /home/releaser/.gitconfig /home/releaser/.transifexrc ; \
+   chmod -R u=rwX,go= /home/releaser/.ssh /home/releaser/.gnupg \
+             /home/releaser/.lsmb-release /home/releaser/.lsmb-github-releases \
+             /home/releaser/.lsmb-site-releases ; \
    chmod +x /home/releaser/bin/mailer
 
