@@ -14,18 +14,20 @@ function substitute_config {
     done
 }
 
-set -e
-set -x
-
-verbose=
-#--verbose
 
 [[ -d ./tmp/ ]] || mkdir ./tmp
-ssh-add -L > ./tmp/authorized_keys
 for f in $(find tmpls/ -type f)
 do
     substitute_config $f
 done
+
+set -e
+# set -x
+
+verbose=
+#--verbose
+
+ssh-add -L > ./tmp/authorized_keys
 virt-builder $verbose \
      -o ./tmp/releaser.qcow2 \
      --format qcow2 \
