@@ -244,7 +244,7 @@ cd '$release_version'
 put 'ledgersmb-$release_version.tar.gz.asc'
 put 'ledgersmb-$release_version.tar.gz'
 " | $sftp -b - "lsmb-uploader@download.ledgersmb.org") \
-     || fail "Failed to upload files to dl.ledgersmb.org!"
+     || fail "Failed to upload files to download.ledgersmb.org!"
 }
 
 publish_files_gh() {
