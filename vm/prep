@@ -11,6 +11,7 @@ gpg_remote_socket=$(ssh releaser@releaser.local gpgconf --list-dir agent-socket)
 
 ssh releaser@releaser.local gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys B7626A90FA0F515B323C8F5C39A629558DA0AF10
 ssh releaser@releaser.local "ssh-keyscan github.com > ~/.ssh/known_hosts"
+ssh releaser@releaser.local "ssh-keyscan download.ledgersmb.org >> ~/.ssh/known_hosts"
 ssh releaser@releaser.local "touch ledgersmb-release-tools ; rm -rf ledgersmb-release-tools"
 ssh releaser@releaser.local git clone git@github.com:ledgersmb/ledgersmb-release-tools
 ssh -R $gpg_remote_socket:$gpg_local_socket releaser@releaser.local

@@ -6,7 +6,7 @@ run-command fstrim -a -v
 
 copy-in ./files/00recommended:/etc/apt/apt.conf.d/
 
-install curl,dhcpcd5,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl,libmime-tools-perl,libemail-sender-perl,libemail-stuffer-perl,libauthen-sasl-perl
+install curl,dhcpcd5,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl,libmime-tools-perl,libemail-sender-perl,libemail-stuffer-perl,libauthen-sasl-perl,libc6-dev,g++,libc++-dev
 copy-in ./files/motd:/etc/
 
 
