@@ -185,7 +185,7 @@ LedgerSMB::Mailer->new(
     from    => $head->get('From'),
     to      => $head->get('To'),
     subject => $head->get('Subject'),
-    body    => $body->as_string,
+    message => $body->as_string,
     )->send;
 
 exit 0;
