@@ -46,6 +46,7 @@ run-command rm /etc/network/interfaces
 run-command adduser releaser ; \
             usermod -a -G kvm,docker releaser \
             mkdir /home/releaser/.ssh /home/releaser/.gnupg /home/releaser/bin
+append-line /home/releaser/.bashrc:export NODE_PATH=/usr/lib/node_modules
 copy-in ./files/mailer:/home/releaser/bin
 copy-in ./tmp/authorized_keys:/home/releaser/.ssh
 copy-in ./files/gnupg.conf:/home/releaser/.gnupg
