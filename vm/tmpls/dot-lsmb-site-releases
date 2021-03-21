@@ -1,2 +1,2 @@
 site_user=LedgerSMB_Team
-site_password=@@SitePassword@@
+site_password='@@SitePassword@@'
