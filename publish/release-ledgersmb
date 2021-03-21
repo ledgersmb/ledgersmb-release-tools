@@ -74,6 +74,7 @@ verify_dependencies() {
    verify_dependency "sha256sum"
    verify_dependency "scp"
    verify_dependency "sftp"
+   verify_dependency "sudo"
    verify_dependency "tx"
    verify_dependency "make"
    verify_dependency "msgmerge"
@@ -82,6 +83,8 @@ verify_dependencies() {
    verify_dependency "jq"
    verify_dependency "cat"
    verify_dependency "date"
+   verify_dependency "createdb"
+   verify_dependency "postgresql_autodoc"
 }
 
 verify_release_key() {
@@ -116,12 +119,26 @@ populate_docker_workspace() {
   || fail "Failed to check out (docker) branch '$branch' from '$docker_URL'!"
 }
 
+update_database_schema() {
+    (cd "$our_workspace/$checkout_dir" && \
+     $sudo -u postgres $psql -c "drop database if exists ledgersmb" && \
+     $sudo -u postgres $createdb ledgersmb && \
+     $sudo -u postgres $psql -c "alter role postgres password 'postgres'" && \
+     $sudo -u postgres $psql -d ledgersmb < sql/Pg-database.sql && \
+     ( for script in $($grep -vE '^#|^$' sql/changes/LOADORDER | $sed -e 's/!//') ; do $sudo -u postgres psql -d ledgersmb < sql/changes/$script ; done ) && \
+     ( for script in $($grep -vE '^#|^$' sql/modules/LOADORDER | $sed -e 's/!//') ; do sudo -u postgres $psql -d ledgersmb < sql/modules/$script ; done ) && \
+     cd doc/database && \
+     $postgresql_autodoc -h localhost -d ledgersmb -U postgres --password=postgres && \
+     $git add --all doc/database && $git commit -m "* Automated release schema update" ) \
+    || fail "Failed to update database schema documentation"
+}
+
 update_translations() {
    (cd "$our_workspace/$checkout_dir" && \
     $tx pull -f -a && utils/devel/rebuild_pot.sh && \
     ($find . -name '*~' -exec rm \{} + ) && \
     ($find . -name '*.orig' -exec rm \{} + ) && \
-    $git add --all locale && git commit -m "* Automated release language update" ) \
+    $git add --all locale && $git commit -m "* Automated release language update" ) \
    || fail "Failed to update branch ($branch) translations"
 }
 
@@ -335,8 +352,12 @@ else
 fi
 if [[ -z "$(cd "$our_workspace/$checkout_dir"; $git tag | grep -E "^$release_version$")" ]]
 then
-  update_translations
 
+  if [[ "$release_version" == "$branch.0" ]]; then
+    update_database_schema
+  fi
+
+  update_translations
   if [[ "$tag_release" == "Y" ]]; then
     update_dockerfile
   fi
