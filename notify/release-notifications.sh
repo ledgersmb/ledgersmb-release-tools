@@ -10,7 +10,7 @@ export release_version release_type release_date release_branch
 export release_changelog release_sha256sums
 
 ConfigFile=~/.lsmb-release
-read -rst1 basedir < <(readlink -f `dirname $0`)
+read -rst1 basedir < <(dirname $(readlink -f $0))
 
 libFile=$basedir/../lib/bash-functions.sh
 [[ -f $libFile ]] && { [[ -r $libFile ]] && source $libFile; } || {
