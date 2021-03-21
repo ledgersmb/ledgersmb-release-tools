@@ -24,6 +24,7 @@ release_key="B7626A90FA0F515B323C8F5C39A629558DA0AF10"
 dl_base_dir="/www/vhosts/download.ledgersmb.org/public_html/f"
 dl_tagged_dir="Releases"
 dl_untagged_dir="Beta Releases"
+pod_base_dir="/www/vhosts/docs.ledgersmb.org/public_html/perl-api"
 tag_release="Y"
 
 if [[ ! -f ~/.lsmb-github-releases ]]; then
@@ -60,7 +61,6 @@ verify_dependency() {
 
 verify_dependencies() {
    verify_dependency "find"
-   verify_dependency "sftp"
    verify_dependency "gpg"
    verify_dependency "git"
    verify_dependency "sed"
@@ -72,6 +72,7 @@ verify_dependencies() {
    verify_dependency "gzip"
    verify_dependency "awk"
    verify_dependency "sha256sum"
+   verify_dependency "scp"
    verify_dependency "sftp"
    verify_dependency "tx"
    verify_dependency "make"
@@ -224,6 +225,12 @@ $(ls -lh "$our_workspace")
 "
 }
 
+build_pod() {
+    (cd "$our_workspace/$checkout_dir" && \
+     $make pod) \
+    || fail "Failed to build Perl API docs!"
+}
+
 update_remote() {
    (cd "$our_workspace/$checkout_dir" && \
     $git push --follow-tags origin "$branch" ) \
@@ -305,6 +312,13 @@ extract_sha256sum() {
      $sha256sum ledgersmb-$release_version.tar.gz* )
 }
 
+upload_pod() {
+    (cd "$our_workspace/$checkout_dir" && \
+         $scp -q -r UI/pod/ \
+              lsmb-uploader@docs.ledgersmb.org:$pod_base_dir/$release_version/ ) \
+        || fail "Failed to upload Perl API docs!"
+}
+
 verify_dependencies
 verify_release_key
 setup_workspace
@@ -345,6 +359,7 @@ create_versiontarball
 sign_versiontarball
 extract_changelog
 extract_sha256sum
+build_pod
 
 # We have the signed binaries now and are about to publish;
 # if anything goes wrong beyond this point, we need the
@@ -371,6 +386,7 @@ if [[ "$tag_release" == "Y" ]]; then
     update_docker_remote
     # we can't upload to GitHub if there's no tag...
     publish_files_gh
+    upload_pod
 fi
 
 clear
