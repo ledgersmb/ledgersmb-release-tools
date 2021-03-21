@@ -1,8 +1,8 @@
 [mail]
 FromAddress  = @@EmailFrom@@
-AnnounceList = ledger-smb-announce@lists.sourceforge.net
-UsersList    = ledger-smb-users@lists.sourceforge.net
-DevelList    = ledger-smb-devel@lists.sourceforge.net
+AnnounceList = announce@lists.ledgersmb.org
+UsersList    = users@lists.ledgersmb.org
+DevelList    = devel@lists.ledgersmb.org
 Server       = @@EmailServer@@
 Port         = @@EmailPort@@
 Password     = @@EmailPassword@@
