@@ -103,37 +103,37 @@ ValidateEnvironment() {
     ############
     #  Test Config to make sure we have everything we need
     ############
-        while true; do
-            TestConfigInit;
-            TestConfig4Key 'mail'   'AnnounceList'  'announce@lists.ledgersmb.org'
-            TestConfig4Key 'mail'   'UsersList'     'users@lists.ledgersmb.org'
-            TestConfig4Key 'mail'   'DevelList'     'devel@lists.ledgersmb.org'
-            TestConfig4Key 'mail'   'FromAddress'   'release@ledgersmb.org'
-            TestConfig4Key 'mail'   'MTAbinary'     'ssmtp'
-            if TestConfigAsk "Send List Mail"; then break; fi
-        done
+        # while true; do
+        #     TestConfigInit;
+        #     TestConfig4Key 'mail'   'AnnounceList'  'announce@lists.ledgersmb.org'
+        #     TestConfig4Key 'mail'   'UsersList'     'users@lists.ledgersmb.org'
+        #     TestConfig4Key 'mail'   'DevelList'     'devel@lists.ledgersmb.org'
+        #     TestConfig4Key 'mail'   'FromAddress'   'release@ledgersmb.org'
+        #     TestConfig4Key 'mail'   'MTAbinary'     'ssmtp'
+        #     if TestConfigAsk "Send List Mail"; then break; fi
+        # done
 
-        while true; do
-            TestConfigInit;
-            TestConfig4Key 'wiki'   'PageToEdit'    'Wikipedia:Sandbox'
-            TestConfig4Key 'wiki'   'User'          'foobar'
-            TestConfig4Key 'wiki'   'Password'      ''
-            if TestConfigAsk "Wikipedia Version Update"; then break; fi
-        done
+        # while true; do
+        #     TestConfigInit;
+        #     TestConfig4Key 'wiki'   'PageToEdit'    'Wikipedia:Sandbox'
+        #     TestConfig4Key 'wiki'   'User'          'foobar'
+        #     TestConfig4Key 'wiki'   'Password'      ''
+        #     if TestConfigAsk "Wikipedia Version Update"; then break; fi
+        # done
 
-        while true; do
-            TestConfigInit;
-            TestConfig4Key 'drupal' 'URL'           'www.ledgersmb.org'
-            TestConfig4Key 'drupal' 'User'          'foobar'
-            TestConfig4Key 'drupal' 'Password'      ''
-            if TestConfigAsk "ledgersmb.org Release Post"; then break; fi
-        done
+        # while true; do
+        #     TestConfigInit;
+        #     TestConfig4Key 'drupal' 'URL'           'www.ledgersmb.org'
+        #     TestConfig4Key 'drupal' 'User'          'foobar'
+        #     TestConfig4Key 'drupal' 'Password'      ''
+        #     if TestConfigAsk "ledgersmb.org Release Post"; then break; fi
+        # done
 
-        while true; do # the script release-IRC.sh checks its own config. but lets at least make sure we have a server url
-            TestConfigInit;
-            TestConfig4Key 'irc' 'Server' 'chat.freenode.net';
-            if TestConfigAsk "IRC Topic Update"; then break; fi
-        done
+        # while true; do # the script release-IRC.sh checks its own config. but lets at least make sure we have a server url
+        #     TestConfigInit;
+        #     TestConfig4Key 'irc' 'Server' 'chat.freenode.net';
+        #     if TestConfigAsk "IRC Topic Update"; then break; fi
+        # done
 
     ############
     #  Test Environment to make sure we have everything we need

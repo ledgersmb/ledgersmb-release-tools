@@ -59,15 +59,15 @@ ValidateEnvironment() {
     ############
     #  Test Config to make sure we have everything we need
     ############
-        while true; do
-            TestConfigInit;
-            TestConfig4Key 'mail'   'AnnounceList'  'ledger-smb-announce@lists.sourceforge.net'
-            TestConfig4Key 'mail'   'UsersList'     'ledger-smb-users@lists.sourceforge.net'
-            TestConfig4Key 'mail'   'DevelList'     'ledger-smb-devel@lists.sourceforge.net'
-            TestConfig4Key 'mail'   'FromAddress'   'release@ledgersmb.org'
-            TestConfig4Key 'mail'   'MTAbinary'     'ssmtp'
-            if TestConfigAsk "Send List Mail"; then break; fi
-        done
+#        while true; do
+#            TestConfigInit;
+#            TestConfig4Key 'mail'   'AnnounceList'  'ledger-smb-announce@lists.sourceforge.net'
+#            TestConfig4Key 'mail'   'UsersList'     'ledger-smb-users@lists.sourceforge.net'
+#            TestConfig4Key 'mail'   'DevelList'     'ledger-smb-devel@lists.sourceforge.net'
+#            TestConfig4Key 'mail'   'FromAddress'   'release@ledgersmb.org'
+#            TestConfig4Key 'mail'   'MTAbinary'     'ssmtp'
+#            if TestConfigAsk "Send List Mail"; then break; fi
+#        done
 
     ############
     #  Test Environment to make sure we have everything we need
