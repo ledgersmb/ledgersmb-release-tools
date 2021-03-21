@@ -57,10 +57,7 @@ upload ./tmp/dot-lsmb-github-releases:/home/releaser/.lsmb-github-releases
 upload ./tmp/dot-transifexrc:/home/releaser/.transifexrc
 
 run-command \
-   chown -R releaser:releaser /home/releaser/.ssh /home/releaser/.gnupg \
-             /home/releaser/.lsmb-release /home/releaser/.lsmb-github-releases \
-             /home/releaser/.lsmb-site-releases /home/releaser/bin \
-             /home/releaser/.gitconfig /home/releaser/.transifexrc ; \
+   chown -R releaser:releaser /home/releaser/ ; \
    chmod -R u=rwX,go= /home/releaser/.ssh /home/releaser/.gnupg \
              /home/releaser/.lsmb-release /home/releaser/.lsmb-github-releases \
              /home/releaser/.lsmb-site-releases ; \
