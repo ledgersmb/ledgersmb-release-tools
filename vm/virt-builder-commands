@@ -11,7 +11,7 @@ copy-in ./files/motd:/etc/
 
 
 run-command pip3 install --upgrade urllib3
-
+run-command pip3 install matrix-client
 
 
 run-command cpanm --notest Pod::ProjectDocs Workflow
