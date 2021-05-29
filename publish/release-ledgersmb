@@ -400,13 +400,17 @@ if [[ "$tag_release" == "Y" ]]; then
 fi
 
 prj_url_dir=$(echo "$prj_sub_dir" | sed -e 's/ /%20/g')
-                                                                                # only after we published to GH, update the docker files so they can download
+# only after we published to 'download.ledgersmb.org',
+# update the docker files so they can download
 publish_files_dl
 
 if [[ "$tag_release" == "Y" ]]; then
+    echo "Pushing docker updates"
     update_docker_remote
     # we can't upload to GitHub if there's no tag...
+    echo "Updating GitHub tag with attachments"
     publish_files_gh
+    echo "Uploading POD documentation"
     upload_pod
 fi
 
