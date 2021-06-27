@@ -2,14 +2,15 @@
 
 set -x
 set -e
+set -o pipefail
 
-ssh-keygen -f "/home/ehuelsmann/.ssh/known_hosts" -R "releaser.local"
+ssh-keygen -f "$HOME/.ssh/known_hosts" -R "releaser.local"
 ssh-keyscan releaser.local >>~/.ssh/known_hosts
 
 gpg_local_socket=$(gpgconf --list-dir agent-extra-socket)
 gpg_remote_socket=$(ssh releaser@releaser.local gpgconf --list-dir agent-socket)
 
-ssh releaser@releaser.local gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys B7626A90FA0F515B323C8F5C39A629558DA0AF10
+cat files/pubkey.asc | ssh releaser@releaser.local gpg --import
 ssh releaser@releaser.local "ssh-keyscan github.com > ~/.ssh/known_hosts"
 ssh releaser@releaser.local "ssh-keyscan download.ledgersmb.org >> ~/.ssh/known_hosts"
 ssh releaser@releaser.local "ssh-keyscan docs.ledgersmb.org >> ~/.ssh/known_hosts"
