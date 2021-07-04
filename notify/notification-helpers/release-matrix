@@ -1,0 +1,55 @@
+#!/usr/bin/perl
+
+use v5.24;
+
+use strict;
+use warnings;
+use utf8;
+
+use IO::Async::Loop;
+use Net::Async::Matrix;
+
+my $loop   = IO::Async::Loop->new;
+my $matrix = Net::Async::Matrix->new(
+    server => $ENV{MATRIX_SERVER},
+    );
+
+$loop->add( $matrix );
+
+say 'Logging in...';
+$matrix->login(
+    user_id    => $ENV{MATRIX_USER},
+    password   => $ENV{MATRIX_PASSWORD},
+    )->get;
+
+say "Joining $ENV{MATRIX_ROOM}...";
+my $room  = $matrix->join_room( $ENV{MATRIX_ROOM} )->get;
+my $topic = $room->topic;
+say 'Topic: ' . $topic;
+
+
+if ($ENV{release_type} eq 'unstable') {
+    if ($topic =~ m/(?<PREFIX>.*)(?<MATCH>| latest preview: [^|]*)(?<POSTFIX>.*)?/i) {
+        my $new_topic = $+{PREFIX} . "| latest preview: $ENV{release_version} " . ($+{POSTFIX} // '');
+        $room->set_topic( $new_topic )->get;
+    }
+    else {
+        say "Topic does not seem to have preview section currently; adding one";
+        my $new_topic = $topic . " | latest preview: $ENV{release_version}";
+        $room->set_topic( $new_topic )->get;
+    }
+}
+else {
+    if ($topic =~ m/(?<PREFIX>.*)(?<MATCH>| latest stable: [^|]*)(?<POSTFIX>.*)?/i) {
+        my $new_topic = $+{PREFIX} . "| latest stable: $release_version " . ($+{POSTFIX} // '');
+        $room->set_topic( $new_topic )->get;
+    }
+    else {
+        die "Unrecognized channel topic: $topic";
+    }
+}
+
+say "Topic changed...";
+
+
+

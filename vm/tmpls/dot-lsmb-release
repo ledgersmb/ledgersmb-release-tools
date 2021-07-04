@@ -11,6 +11,14 @@ AuthMech     = @@EmailAUTHMECH@@
 TLS          = @@EmailTLS@@
 # SMTP_TIMEOUT and SMTP_HELO not supported at the moment.
 
+
+[matrix]
+Server              = @@MatrixServer@@
+User                = @@@MatrixUser@@:@@MatrixServer@@
+Password            = @@MatrixPassword@@
+Room                = #ledgersmb:matrix.org
+
+
 [irc]
 Server              = chat.freenode.net
 Port                = 6667

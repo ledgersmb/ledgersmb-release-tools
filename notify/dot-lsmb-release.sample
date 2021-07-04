@@ -11,6 +11,13 @@ PageToEdit   = Wikipedia:Sandbox
 User         = foobar
 Password     =
 
+[matrix]
+Server              = matrix.org
+User                = ledgersmb_u_bot
+Password            = ledgersmb_u_bot
+Room                = #ledgersmb:matrix.org
+
+
 [irc]
 Server              = chat.freenode.net
 Port                = 6667

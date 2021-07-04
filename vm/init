@@ -138,6 +138,10 @@ declare -A conf=(
     [IrcUser]="$user"
     [IrcPassword]=Doe
 
+    [MatrixPassword]=Doe
+    [MatrixServer]="matrix.org"
+    [MatrixUser]="$user"
+
     [SitePassword]=None
 
     [TransifexPassword]=None

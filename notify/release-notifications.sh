@@ -39,6 +39,10 @@ updateIRC() {
     $basedir/notification-helpers/release-irc.sh $release_type $release_version
 }
 
+updateMatrix() {
+    MATRIX_USER="${cfgValue[matrix_User]}" MATRIX_PASSWORD="${cfgValue[matrix_Password]}" MATRIX_SERVER="${cfgValue[matrix_Server]}" $basedir/notification-helpers/release-matrix
+}
+
 composeReleaseStatement() {
 
     cat >~/ledgersmb-release-text <<-EOF
@@ -85,7 +89,8 @@ sendEmail() {
 RunAllUpdates() {
     if ! [[ "$release_type" == "oldstable" ]]; then
         #updateWikipedia "$release_version" "$release_date";
-        updateIRC;
+        #updateIRC;
+        updateMatrix;
     fi
     composeReleaseStatement;
     updateGitHub;
