@@ -1,0 +1,3 @@
+<persister name="MainPersister"
+           class="LedgerSMB::Releaser::Persister"
+           path="$HOME/release-data"/>

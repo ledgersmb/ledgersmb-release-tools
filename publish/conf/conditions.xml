@@ -1,0 +1,9 @@
+<conditions>
+  <condition name="have ledgersmb workspace" class="LedgerSMB::Releaser::Condition::HaveWorkspace">
+    <param name="workspace-key" value="our_workspace" />
+  </condition>
+  <condition name="have docker workspace" class="LedgerSMB::Releaser::Condition::HaveWorkspace">
+    <param name="workspace-key" value="docker_workspace" />
+  </condition>
+  
+</conditions>

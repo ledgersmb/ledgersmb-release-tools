@@ -1,0 +1,28 @@
+#!/usr/bin/env perl
+
+use v5.24;
+use strict;
+use warnings;
+use utf8;
+
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+
+use Log::Log4perl qw(:easy);
+use Workflow;
+use Workflow::Factory qw( FACTORY );
+
+my $config_dir = "$Bin/../conf";
+
+Log::Log4perl->easy_init($DEBUG);
+
+FACTORY()->add_config_from_file(
+    workflow => "$config_dir/workflow.xml",
+    condition => "$config_dir/conditions.xml",
+    persister => "$config_dir/persister.xml",
+    );
+
+
+FACTORY()->create_workflow( 'release' );
+
+exit 0;
