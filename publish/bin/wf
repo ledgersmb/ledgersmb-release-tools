@@ -8,6 +8,7 @@ use utf8;
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 
+use Getopt::Long;
 use Log::Log4perl qw(:easy);
 use Workflow;
 use Workflow::Factory qw( FACTORY );
@@ -27,13 +28,34 @@ FACTORY()->add_config_from_file(
 my $wf;
 my $ctx = Workflow::Context->new();
 
-$ctx->param( branch  => '1.8'    );
-$ctx->param( release => '1.8.16' );
+sub wf_option {
+    my ( $option, $value ) = @_;
+
+    $ctx->param( $option => $value );
+}
+
+GetOptions(
+    'force-tag' => \&wf_option,
+    );
+
+my ( $branch, $release, $uploader ) = @ARGV;
+$ctx->param( branch   => $branch );
+$ctx->param( release  => $release );
+$ctx->param( uploader => $uploader );
+
 
 $wf = FACTORY()->create_workflow( 'release', $ctx );
 
+eval {
+    $wf->execute_action( 'next' );
+};
+print "$@\n" if $@;
 
+unless ($wf->state eq 'DONE') {
+    say "Workflow didn't run to completion. Use " . $wf->id . " to restart";
 
+    exit 1;
+}
 
 
 exit 0;

@@ -4,7 +4,12 @@
   <description>LedgerSMB release process</description>
 
 
-  <state name="INITIAL" autorun="yes" may_stop="yes">
+  <state name="INITIAL">
+    <action name="next" resulting_state="BEGIN" />
+  </state>
+
+
+  <state name="BEGIN" autorun="yes" may_stop="yes">
     <action name="next" resulting_state="deps satisfied">
       <condition name="deps available" />
     </action>
@@ -24,12 +29,53 @@
 
   <state name="have ledgersmb workspace"
          autorun="yes" may_stop="yes">
-    <action name="skip" resulting_state="DONE">
+    <action name="detect LedgerSMB.pm path"
+            resulting_state="have ledgersmb workspace analysis (1)"/>
+  </state>
+
+
+  <state name="have ledgersmb workspace analysis (1)"
+         autorun="yes" may_stop="yes">
+    <action name="detect current version"
+            resulting_state="have analysed ledgersmb workspace"/>
+  </state>
+
+
+  <state name="have analysed ledgersmb workspace"
+         autorun="yes" may_stop="yes">
+    <action name="skip" resulting_state="have docker workspace">
       <condition name="have docker workspace" />
     </action>
-    <action name="create docker workspace" resulting_state="DONE">
+    <action name="create docker workspace"
+            resulting_state="have docker workspace">
       <condition name="!have docker workspace" />
     </action>
+  </state>
+
+
+  <state name="have docker workspace"
+         autorun="yes" may_stop="yes">
+    <action name="skip" resulting_state="updated database schema">
+      <condition name="!new minor release" />
+    </action>
+    <action name="update database schema"
+            resulting_state="updated database schema">
+      <condition name="new minor release" />
+    </action>
+  </state>
+
+
+  <state name="updated database schema"
+         autorun="yes" may_stop="yes">
+    <action name="update translations"
+            resulting_state="updated translations"/>
+  </state>
+
+
+  <state name="updated translations"
+         autorun="yes" may_stop="yes">
+    <action name="update Dockerfile"
+            resulting_state="DONE" />
   </state>
 
 

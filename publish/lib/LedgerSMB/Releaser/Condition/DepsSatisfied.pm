@@ -30,7 +30,7 @@ sub evaluate {
             and condition_error "Failed to assert availability of: $cmd";
     }
 
-    return;
+    return 1;
 }
 
 1;

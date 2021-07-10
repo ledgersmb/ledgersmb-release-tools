@@ -11,4 +11,61 @@
           context_key="docker_workspace"
           clone_url="git@github.com:ledgersmb/ledgersmb-docker"
           clone_dir="docker" />
+  <action name="detect current version"
+          class="LedgerSMB::Releaser::Action::DetectCurrentVersion" />
+  <action name="detect LedgerSMB.pm path"
+          class="LedgerSMB::Releaser::Action::DetectMainModulePath" />
+  <action name="update database schema"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%our_workspace%/ledgersmb"
+
+sudo -u postgres psql -c "drop database if exists ledgersmb"
+sudo -u postgres psql -c "alter role postgres password 'postgres'"
+sudo -u postgres createdb ledgersmb
+sudo -u postgres psql -d ledgersmb < sql/Pg-database.sql
+for script in $(grep -vE '^#|^$' sql/changes/LOADORDER | sed -e 's/!//')
+do
+  sudo -u postgres psql -d ledgersmb < sql/changes/$script
+done
+for script in $(grep -vE '^#|^$' sql/modules/LOADORDER | sed -e 's/!//')
+do
+  sudo -u postgres psql -d ledgersmb < sql/modules/$script
+done
+
+( cd doc/database
+  postgresql_autodoc -h localhost -d ledgersmb -U postgres --password=postgres )
+
+git add --all doc/database
+git commit -m "* Automated release schema update"
+    ]]></command>
+  </action>
+
+  <action name="update translations"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%our_workspace%/ledgersmb"
+
+tx pull -f -a
+utils/devel/rebuild_pot.sh
+find . \( -name '*~' -o -name '*.orig' \) -exec rm \{} +
+git add --all locale
+git commit -m "* Automated release language update"
+]]></command>
+  </action>
+
+  <action name="update Dockerfile"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%docker_workspace%/docker"
+
+sed -i -e "s/^ENV LSMB_VERSION .*\$/ENV LSMB_VERSION %release%/
+           s/^ARG LSMB_VERSION=.*\$/ARG LSMB_VERSION=\"%release%\"/
+           s/^ARG LSMB_DL_DIR=.*\$/ARG LSMB_DL_DIR=\"%prj_sub_dir%\"/ " \
+    Dockerfile
+
+git commit -a -m "* Automatic Dockerfile update by release process"
+git tag "%release%"
+]]></command>
+  </action>
 </actions>

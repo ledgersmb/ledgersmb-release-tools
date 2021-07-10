@@ -1,4 +1,4 @@
-package LedgerSMB::Releaser::Action::CreateWorkspace;
+package LedgerSMB::Releaser::Action::RunCommand;
 
 use strict;
 use warnings;
@@ -9,7 +9,7 @@ use Workflow::Exception qw( configuration_error workflow_error );
 
 use File::Temp;
 
-my @FIELDS = qw( context_key clone_url clone_dir );
+my @FIELDS = qw( command );
 __PACKAGE__->mk_accessors( @FIELDS );
 
 sub init {
@@ -28,17 +28,22 @@ sub init {
 sub execute {
     my ( $self, $wf ) = @_;
     my $ctx = $wf->context;
-    my $key = $self->context_key;
-    my $url = $self->clone_url;
-    my $tgt = $self->clone_dir;
-    my $b   = $ctx->param( 'branch' );
+    my $cmd = $self->command;
 
-    $ctx->param( $key, File::Temp->newdir( CLEANUP => 0 )->dirname );
-    my $workspace = $ctx->param( $key );
-    my @args = ( 'git', 'clone', '--recursive', '-b', $b,
-                 $url, "$workspace/$tgt" );
+    my $tmpfile = File::Temp->new;
+    my @args;
+
+    if ($self->command =~ m/^#!/) {
+    }
+    else {
+        @args = ($ENV{SHELL}, $tmpfile->filename);
+
+        print $tmpfile "set -xeo pipefail\n\n";
+        print $tmpfile ($self->command =~ s/%(\w+)%/$ctx->param($1)/ger);
+        close $tmpfile;
+    }
     system(@args)
-        and die "Failed to clone '$url' into '$workspace/$tgt': $?";
+        and die "Failed to execute @args: $?";
 }
 
 1;
