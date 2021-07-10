@@ -1,0 +1,33 @@
+
+### just an example of how the workflow might look in yaml
+
+workflows:
+  - type: release
+    persister: MainPersister
+    description: |
+      long description here
+
+    states:
+      - name: INITIAL
+        autorun: yes
+        may_stop: yes
+        actions:
+          - name: skip > have ledgersmb workspace
+            conditions:
+              - name: have ledgersmb workspace
+          - name: create ledgersmb workspace > have ledgersmb workspace
+            conditions:
+              - name: !have ledgersmb workspace
+
+      - name: have ledgersmb workspace
+        autorun: yes
+        may_stop: yes
+        actions:
+          - name: skip
+            resulting_state: have ledgersmb workspace
+            conditions:
+              - name: have ledgersmb workspace
+          - name: create docker workspace
+            resulting_state: have docker workspace
+            conditions:
+              - name: !have docker workspace

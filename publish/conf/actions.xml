@@ -1,14 +1,14 @@
-<actions type="release">
-
+<actions>
   <action name="skip" class="Workflow::Action::Null"/>
+  <action name="next" class="Workflow::Action::Null" />
   <action name="create ledgersmb workspace"
           class="LedgerSMB::Releaser::Action::CreateWorkspace"
           context_key="our_workspace"
           clone_url="git@github.com:ledgersmb/LedgerSMB"
-          clone_target="ledgersmb" />
+          clone_dir="ledgersmb" />
   <action name="create docker workspace"
           class="LedgerSMB::Releaser::Action::CreateWorkspace"
           context_key="docker_workspace"
           clone_url="git@github.com:ledgersmb/ledgersmb-docker"
-          clone_target="docker" />
+          clone_dir="docker" />
 </actions>

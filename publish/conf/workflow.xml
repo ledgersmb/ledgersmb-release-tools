@@ -1,7 +1,17 @@
 <workflow type="release">
+
   <persister>MainPersister</persister>
   <description>LedgerSMB release process</description>
+
+
   <state name="INITIAL" autorun="yes" may_stop="yes">
+    <action name="next" resulting_state="deps satisfied">
+      <condition name="deps available" />
+    </action>
+  </state>
+
+
+  <state name="deps satisfied" autorun="yes" may_stop="yes">
     <action name="skip" resulting_state="have ledgersmb workspace">
       <condition name="have ledgersmb workspace" />
     </action>
@@ -10,7 +20,10 @@
       <condition name="!have ledgersmb workspace" />
     </action>
   </state>
-  <state name="have ledgersmb workspace">
+
+
+  <state name="have ledgersmb workspace"
+         autorun="yes" may_stop="yes">
     <action name="skip" resulting_state="DONE">
       <condition name="have docker workspace" />
     </action>
@@ -18,5 +31,7 @@
       <condition name="!have docker workspace" />
     </action>
   </state>
+
+
   <state name="DONE" />
 </workflow>

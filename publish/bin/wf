@@ -18,11 +18,22 @@ Log::Log4perl->easy_init($DEBUG);
 
 FACTORY()->add_config_from_file(
     workflow => "$config_dir/workflow.xml",
+    action => "$config_dir/actions.xml",
     condition => "$config_dir/conditions.xml",
     persister => "$config_dir/persister.xml",
     );
 
 
-FACTORY()->create_workflow( 'release' );
+my $wf;
+my $ctx = Workflow::Context->new();
+
+$ctx->param( branch  => '1.8'    );
+$ctx->param( release => '1.8.16' );
+
+$wf = FACTORY()->create_workflow( 'release', $ctx );
+
+
+
+
 
 exit 0;
