@@ -48,7 +48,7 @@ cd "%our_workspace%/ledgersmb"
 
 tx pull -f -a
 utils/devel/rebuild_pot.sh
-find . \( -name '*~' -o -name '*.orig' \) -exec rm \{} +
+find . \( -name '*~' -o -name '*.orig' \) -exec rm '{}' +
 git add --all locale
 git commit -m "* Automated release language update"
 ]]></command>
@@ -61,11 +61,23 @@ cd "%docker_workspace%/docker"
 
 sed -i -e "s/^ENV LSMB_VERSION .*\$/ENV LSMB_VERSION %release%/
            s/^ARG LSMB_VERSION=.*\$/ARG LSMB_VERSION=\"%release%\"/
-           s/^ARG LSMB_DL_DIR=.*\$/ARG LSMB_DL_DIR=\"%prj_sub_dir%\"/ " \
+           s/^ARG LSMB_DL_DIR=.*\$/ARG LSMB_DL_DIR=\"%download_dir%\"/ " \
     Dockerfile
 
 git commit -a -m "* Automatic Dockerfile update by release process"
 git tag "%release%"
 ]]></command>
   </action>
+
+
+  <action name="calculate release variables"
+          class="LedgerSMB::Releaser::Action::SetReleaseVars" />
+
+
+  <!-- action name="publish files for download"
+       class="LedgerSMB::Releaser::Action::UploadArtifacts" / -->
+
+  <action name="show release delta"
+          class="LedgerSMB::Releaser::Action::ShowRelease" />
+
 </actions>

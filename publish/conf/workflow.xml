@@ -37,9 +37,25 @@
   <state name="have ledgersmb workspace analysis (1)"
          autorun="yes" may_stop="yes">
     <action name="detect current version"
-            resulting_state="have analysed ledgersmb workspace"/>
+            resulting_state="have ledgersmb workspace analysis (2)"
+            />
   </state>
 
+
+  <state name="have ledgersmb workspace analysis (2)"
+         autorun="yes" may_stop="yes">
+    <action name="calculate release variables"
+            resulting_state="showing release variables"
+            />
+  </state>
+
+
+  <state name="showing release variables"
+         autorun="yes" may_stop="yes">
+    <action name="show release delta"
+            resulting_state="have analysed ledgersmb workspace"
+            />
+  </state>
 
   <state name="have analysed ledgersmb workspace"
          autorun="yes" may_stop="yes">

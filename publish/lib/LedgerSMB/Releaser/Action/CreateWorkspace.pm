@@ -35,7 +35,7 @@ sub execute {
 
     $ctx->param( $key, File::Temp->newdir( CLEANUP => 0 )->dirname );
     my $workspace = $ctx->param( $key );
-    my @args = ( 'git', 'clone', '--recursive', '-b', $b,
+    my @args = ( 'git', 'clone', '--single-branch', '--recursive', '-b', $b,
                  $url, "$workspace/$tgt" );
     system(@args)
         and die "Failed to clone '$url' into '$workspace/$tgt': $?";
