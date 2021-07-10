@@ -204,8 +204,12 @@ Please execute the following steps manually:
  * Update the latest version on Wikipedia
    - https://en.wikipedia.org/wiki/Comparison_of_accounting_software
    - https://ru.wikipedia.org/w/index.php?title=%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%82:%D0%98%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B5_%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8/%D0%A1%D0%BF%D0%B8%D1%81%D0%BA%D0%B8/%D0%A1%D0%BF%D0%B8%D1%81%D0%BE%D0%BA_ERP-%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC&action=edit
+
+List of ERP software packages (multiple languages):
    - https://en.wikipedia.org/wiki/List_of_ERP_software_packages
    - https://ja.wikipedia.org/wiki/ERP%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A7%E3%82%A2%E3%83%91%E3%83%83%E3%82%B1%E3%83%BC%E3%82%B8%E3%81%AE%E4%B8%80%E8%A6%A7
+   - https://es.wikipedia.org/wiki/Anexo:Software_ERP
+   - https://fr.wikipedia.org/wiki/Liste_de_progiciels_de_gestion_int%C3%A9gr%C3%A9s
 "
 
 
