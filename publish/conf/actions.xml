@@ -162,5 +162,56 @@ curl -sS -u lsmb-uploader: --ftp-create-dirs -T "ledgersmb-%release%.tar.gz{,.as
           class="LedgerSMB::Releaser::Action::CalculateDigests" />
 
 
+  <action name="create tarball"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%our_workspace%/ledgersmb"
+
+git checkout "%release%"
+make dist DIST_DIR=../ DIST_VER="%release%"
+]]></command>
+  </action>
+
+
+  <action name="create github release"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%our_workspace%"
+gh_auth="-u %github_user%:%github_token%"
+
+curl -X POST $gh_auth "https://api.github.com/repos/ledgersmb/LedgerSMB/releases" \
+     -d '{"tag_name":"%release%","name":"%release%","draft":false,"body":"todo"}' \
+     > github_release_create_response
+]]></command>
+  </action>
+
+
+  <action name="github upload signature file"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%our_workspace%"
+gh_auth="-u %github_user%:%github_token%"
+
+upload_url=$(jq -M -r '.upload_url' < release_create_response | sed -e 's/{.*//')
+curl -X POST $gh_auth -H 'Content-Type: text/plain' \
+     "$upload_url?name=ledgersmb-%release%.tar.gz.asc" \
+     -T ledgersmb-%release%.tar.gz.asc
+]]></command>
+  </action>
+
+
+  <action name="github upload tarball"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%our_workspace%"
+gh_auth="-u %github_user%:%github_token%"
+
+upload_url=$(jq -M -r '.upload_url' < release_create_response | sed -e 's/{.*//')
+curl -X POST $gh_auth -H 'Content-Type: application/x-tar' \
+     "$upload_url?name=ledgersmb-%release%.tar.gz" \
+     -T ledgersmb-%release%.tar.gz
+]]></command>
+  </action>
+
 
 </actions>
