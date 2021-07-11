@@ -9,4 +9,7 @@
     <param name="commands" value="find,gpg,git,sed,grep,tar,perl,mktemp,less,gzip,awk,sha256sum,scp,sftp,sudo,tx,make,msgmerge,msguniq,curl,jq,cat,date,createdb,postgresql_autodoc,diffstat" />
   </condition>
   <condition name="new minor release" class="LedgerSMB::Releaser::Condition::IsNewMinorRelease" />
+  <condition name="release to be tagged"
+             test="$context->{tagged}"
+             class="Workflow::Condition::Evaluate" />
 </conditions>

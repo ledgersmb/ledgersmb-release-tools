@@ -15,6 +15,12 @@
           class="LedgerSMB::Releaser::Action::DetectCurrentVersion" />
   <action name="detect LedgerSMB.pm path"
           class="LedgerSMB::Releaser::Action::DetectMainModulePath" />
+  <action name="verify release key"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+[[ -n "$(gpg --list-secret-keys "B7626A90FA0F515B323C8F5C39A629558DA0AF10")" ]]
+    ]]></command>
+  </action>
   <action name="update database schema"
           class="LedgerSMB::Releaser::Action::RunCommand">
     <command><![CDATA[
@@ -74,10 +80,87 @@ git tag "%release%"
           class="LedgerSMB::Releaser::Action::SetReleaseVars" />
 
 
+  <action name="patch files for release"
+          replace="current_version > release"
+          exclude="^(Changelog|sql/changes/)"
+          class="LedgerSMB::Releaser::Action::VersionPatchFiles" />
+
+  <action name="patch files for new dev version"
+          replace="release > next_version"
+          exclude="^(Changelog|sql/changes/)"
+          class="LedgerSMB::Releaser::Action::VersionPatchFiles" />
+
   <!-- action name="publish files for download"
        class="LedgerSMB::Releaser::Action::UploadArtifacts" / -->
 
   <action name="show release delta"
-          class="LedgerSMB::Releaser::Action::ShowRelease" />
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%our_workspace%/ledgersmb"
+
+
+git diff | diffstat
+git diff
+]]></command>
+  </action>
+
+
+  <action name="commit release version update"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%our_workspace%/ledgersmb"
+
+git commit -am "Update version"
+]]></command>
+  </action>
+
+
+  <action name="commit development version update"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%our_workspace%/ledgersmb"
+
+git commit -am "Update version
+
+[skip ci]"
+]]></command>
+  </action>
+
+
+  <action name="commit version tag"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%our_workspace%/ledgersmb"
+
+git tag -m "%release%" "%release%"
+]]></command>
+  </action>
+
+
+  <action name="upload pod"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%our_workspace%/ledgersmb"
+
+scp -q -r UI/pod/ lsmb-uploader@docs.ledgersmb.org:/www/vhosts/docs.ledgersmb.org/public_html/perl-api/%release%/
+]]></command>
+  </action>
+
+
+  <action name="upload release artifacts"
+          class="LedgerSMB::Releaser::Action::RunCommand">
+    <command><![CDATA[
+cd "%our_workspace%"
+
+curl -sS -u lsmb-uploader: --ftp-create-dirs -T "ledgersmb-%release%.tar.gz{,.asc}" \
+   'sftp://download.ledgersmb.org/www/vhosts/download.ledgersmb.org/public_html/f/%download_dir%/%release%/'
+]]></command>
+  </action>
+
+
+  <action name="calculate digests"
+          class="LedgerSMB::Releaser::Action::CalculateDigests" />
+
+
 
 </actions>

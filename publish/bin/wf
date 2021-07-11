@@ -16,8 +16,8 @@ use Workflow::Factory qw( FACTORY );
 my $config_dir = "$Bin/../conf";
 
 FACTORY()->add_config_from_file(
-    workflow => "$config_dir/workflow.xml",
-    action => "$config_dir/actions.xml",
+    workflow  => "$config_dir/workflow.xml",
+    action    => "$config_dir/actions.xml",
     condition => "$config_dir/conditions.xml",
     persister => "$config_dir/persister.xml",
     );
@@ -65,18 +65,40 @@ else {
     $wf = FACTORY()->fetch_workflow( 'release', $workflow );
     my $ctx = $wf->context;
 
-    $ctx->param( $_->@* ) for @ctx_overrides;
+    my $cmd = pop @ARGV;
+    if ($cmd eq 'cleanup') {
+        my $our_workspace    = $ctx->param( 'our_workspace' );
+        my $docker_workspace = $ctx->param( 'docker_workspace' );
 
-    my @actions = $wf->get_current_actions();
-
-    if (scalar @actions == 1) {
-        $wf->execute_action( $actions[0] );
-    }
-    elsif (scalar @actions == 0) {
-        die "No actions available for workflow in state " . $wf->state;
+        if (-d $docker_workspace) {
+            system('rm', '-rf', $docker_workspace)
+                and warn "Error removing path '$docker_workspace': $?";
+        }
+        else {
+            say "No docker workspace to remove ('$docker_workspace' doesn't exist)";
+        }
+        if (-d $our_workspace) {
+            system('rm', '-rf', $our_workspace)
+                and warn "Error removing path '$our_workspace': $?";
+        }
+        else {
+            say "No workspace to remove ('$our_workspace' doesn't exist)";
+        }
     }
     else {
-        die "Too many available actions to run workflow";
+        $ctx->param( $_->@* ) for @ctx_overrides;
+
+        my @actions = $wf->get_current_actions();
+
+        if (scalar @actions == 1) {
+            $wf->execute_action( $actions[0] );
+        }
+        elsif (scalar @actions == 0) {
+            die "No actions available for workflow in state " . $wf->state;
+        }
+        else {
+            die "Too many available actions to run workflow";
+        }
     }
 }
 

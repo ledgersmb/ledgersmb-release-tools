@@ -16,7 +16,8 @@ sub execute {
     my $suffix  = ($current =~ s/(\d+[.]\d+[.])(\d+)//r); # remove the version number
     my $mm_ver  = $1;
     my $patch   = $2;
-    my $branch_next = sprintf("$1.%s%s", ($patch + 1), $suffix);
+    # the dot after the minor version is part of $mm_ver
+    my $branch_next = sprintf("$mm_ver%s%s", ($patch + 1), $suffix);
 
     if (not $release) {
         $release = "$mm_ver.$patch";
@@ -27,6 +28,8 @@ sub execute {
     if ($release =~ m/[-]/) {
         # prerelease version
 
+        ###TODO: what if 'tagged' already defined?
+        ###TODO: what if 'force-tag' already defined?
         $ctx->param( 'tagged', '' );
         $ctx->param( 'download_dir', 'Beta Releases' );
     }

@@ -17,6 +17,11 @@
 
 
   <state name="deps satisfied" autorun="yes" may_stop="yes">
+    <action name="verify release key" resulting_state="release key available" />
+  </state>
+
+
+  <state name="release key available" autorun="yes" may_stop="yes">
     <action name="skip" resulting_state="have ledgersmb workspace">
       <condition name="have ledgersmb workspace" />
     </action>
@@ -91,7 +96,24 @@
   <state name="updated translations"
          autorun="yes" may_stop="yes">
     <action name="update Dockerfile"
-            resulting_state="DONE" />
+            resulting_state="updated Dockerfile"
+            />
+  </state>
+
+
+  <state name="updated Dockerfile"
+         autorun="yes" may_stop="yes">
+    <action name="patch files for release"
+            resulting_state="files patched for release and review"
+            />
+  </state>
+
+
+  <state name="files patched for release and review"
+         autorun="yes" may_stop="yes">
+    <action name="show release delta"
+            resulting_state="DONE"
+            />
   </state>
 
 
