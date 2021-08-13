@@ -85,6 +85,7 @@ verify_dependencies() {
    verify_dependency "date"
    verify_dependency "createdb"
    verify_dependency "postgresql_autodoc"
+   verify_dependency "uuid"
 }
 
 verify_release_key() {
@@ -93,10 +94,24 @@ verify_release_key() {
    fi
 }
 
+failure_cleanup() {
+    $rm -rf "$our_workspace"
+    $rm -rf "$docker_workspace"
+    if [[ -n "$upload_staging" ]]
+    then
+        echo "cd '$upload_staging'
+-rm 'ledgersmb-$release_version.tar.gz.asc'
+-rm 'ledgersmb-$release_version.tar.gz'
+cd ..
+rmdir '$upload_staging'
+" | $sftp -b - "lsmb-uploader@download.ledgersmb.org"
+    fi
+}
+
 setup_workspace() {
    our_workspace=$($mktemp -d)
    docker_workspace=$($mktemp -d)
-   trap "rm -rf '$our_workspace'; rm -rf '$docker_workspace'" TERM EXIT
+   trap "failure_cleanup" TERM EXIT
 }
 
 populate_workspace() {
@@ -260,13 +275,24 @@ update_docker_remote() {
    || fail "Failed to update remote docker repository!"
 }
 
+stage_files_dl() {
+    (cd "$our_workspace" && \
+     echo "mkdir '$upload_staging'
+cd '$upload_staging'
+put 'ledgersmb-$release_version.tar.gz.asc'
+put 'ledgersmb-$release_version.tar.gz'
+" | $sftp -b - "lsmb-uploader@download.ledgersmb.org") \
+     || fail "Failed to upload files to download.ledgersmb.org!"
+}
+
 publish_files_dl() {
     (cd "$our_workspace" && \
      echo "cd '$dl_base_dir/$prj_sub_dir'
 mkdir '$release_version'
 cd '$release_version'
-put 'ledgersmb-$release_version.tar.gz.asc'
-put 'ledgersmb-$release_version.tar.gz'
+rename '$upload_staging/ledgersmb-$release_version.tar.gz.asc' './ledgersmb-$release_version.tar.gz.asc'
+rename '$upload_staging/ledgersmb-$release_version.tar.gz' './ledgersmb-$release_version.tar.gz'
+rmdir '$upload_staging'
 " | $sftp -b - "lsmb-uploader@download.ledgersmb.org") \
      || fail "Failed to upload files to download.ledgersmb.org!"
 }
@@ -382,6 +408,11 @@ extract_changelog
 extract_sha256sum
 build_pod
 
+upload_staging="$dl_base_dir/../staging/$($uuid)"
+stage_files_dl
+
+
+
 # We have the signed binaries now and are about to publish;
 # if anything goes wrong beyond this point, we need the
 # binaries to restart the process "by hand" or even to
@@ -389,14 +420,26 @@ build_pod
 trap - TERM EXIT
 
 typeset -u yn
-echo -n "Ready to publish now. Proceed? [y/N] "
+echo -n "Ready to publish $release_version now. Proceed? [y/N] "
 read yn
 if [[ "$yn" != "Y" ]]; then
-   fail "Aborted by user!"
+
+    $cat - <<-EOF
+	Release artifacts left:
+
+	  LedgerSMB workspace: $our_workspace
+	  Docker workspace:    $docker_workspace
+	  Upload staging area: ${upload_staging:-(none)}
+	EOF
+    fail "Aborted by user!"
 fi
 
 if [[ "$tag_release" == "Y" ]]; then
+    echo "Pushing changes to repository"
     update_remote
+
+    echo "Pushing docker updates"
+    update_docker_remote
 fi
 
 prj_url_dir=$(echo "$prj_sub_dir" | sed -e 's/ /%20/g')
@@ -405,14 +448,13 @@ prj_url_dir=$(echo "$prj_sub_dir" | sed -e 's/ /%20/g')
 publish_files_dl
 
 if [[ "$tag_release" == "Y" ]]; then
-    echo "Pushing docker updates"
-    update_docker_remote
     # we can't upload to GitHub if there's no tag...
     echo "Updating GitHub tag with attachments"
     publish_files_gh
     echo "Uploading POD documentation"
     upload_pod
 fi
+
 
 clear
 
@@ -434,7 +476,7 @@ EOF
 )"
 EOT
 
-rm -rf "$our_workspace"
-rm -rf "$docker_workspace"
+$rm -rf "$our_workspace"
+$rm -rf "$docker_workspace"
 
 exit 0
