@@ -86,6 +86,7 @@ verify_dependencies() {
    verify_dependency "createdb"
    verify_dependency "postgresql_autodoc"
    verify_dependency "uuid"
+   verify_dependency "docker"
 }
 
 verify_release_key() {
@@ -263,6 +264,12 @@ build_pod() {
     || fail "Failed to build Perl API docs!"
 }
 
+build_docker_images() {
+    (cd "$docker_workspace/docker" && \
+     $sudo $docker build --build-arg "ARTIFACT_LOCATION=$staged_artifact" -t ledgersmb/ledgersmb:$branch . ) \
+    || fail "Failed to build docker images"
+}
+
 update_remote() {
    (cd "$our_workspace/$checkout_dir" && \
     $git push --follow-tags origin "$branch" ) \
@@ -283,6 +290,18 @@ put 'ledgersmb-$release_version.tar.gz.asc'
 put 'ledgersmb-$release_version.tar.gz'
 " | $sftp -b - "lsmb-uploader@download.ledgersmb.org") \
      || fail "Failed to upload files to download.ledgersmb.org!"
+
+publish_docker_images() {
+    ($sudo $docker login &&
+     $docker image tag ledgersmb/ledgersmb:$branch ledgersmb/ledgersmb:$release_version && \
+     ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
+      || $docker image tag ledgersmb/ledgersmb:$branch ledgersmb/ledgersmb:latest ) && \
+     $sudo $docker image push ledgersmb/ledgersmb:$branch && \
+     $sudo $docker image push ledgersmb/ledgersmb:$release_version && \
+     ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
+      || $sudo $docker image push ledgersmb/ledgersmb:latest)
+    ) \
+    || fail "Failed to publish docker images"
 }
 
 publish_files_dl() {
@@ -309,7 +328,7 @@ publish_files_gh() {
          "$upload_url?name=ledgersmb-$release_version.tar.gz.asc" \
          -T $our_workspace/ledgersmb-$release_version.tar.gz.asc \
    || fail "Failed to upload signature file to GitHub!"
-   $curl -X POST -H 'Content-Type: application/x-tar' $gh_auth \
+l   $curl -X POST -H 'Content-Type: application/x-tar' $gh_auth \
          "$upload_url?name=ledgersmb-$release_version.tar.gz" \
          -T $our_workspace/ledgersmb-$release_version.tar.gz \
    || fail "Failed to upload tarball to GitHub!"
@@ -408,10 +427,14 @@ extract_changelog
 extract_sha256sum
 build_pod
 
-upload_staging="$dl_base_dir/../staging/$($uuid)"
+staging_uuid=$($uuid)
+upload_staging="$dl_base_dir/../staging/$staging_uuid"
 stage_files_dl
 
-
+staged_artifact="https://download.ledgersmb.org/staging/$staging_uuid/ledgersmb-$releaese_version.tar.gz"
+if [[ "$tag_release" == "Y" ]]; then
+    build_docker_images
+fi
 
 # We have the signed binaries now and are about to publish;
 # if anything goes wrong beyond this point, we need the
@@ -442,18 +465,25 @@ if [[ "$tag_release" == "Y" ]]; then
     update_docker_remote
 fi
 
-prj_url_dir=$(echo "$prj_sub_dir" | sed -e 's/ /%20/g')
 # only after we published to 'download.ledgersmb.org',
 # update the docker files so they can download
-publish_files_dl
+staging_dir=$(uuid)
+stage_files_dl
 
 if [[ "$tag_release" == "Y" ]]; then
+    echo "Uploading POD documentation"
+    upload_pod
+
     # we can't upload to GitHub if there's no tag...
     echo "Updating GitHub tag with attachments"
     publish_files_gh
-    echo "Uploading POD documentation"
-    upload_pod
+
+    echo "Uploading Docker images"
+    publish_docker_images
 fi
+
+prj_url_dir=$(echo "$prj_sub_dir" | sed -e 's/ /%20/g')
+publish_files_dl
 
 
 clear
