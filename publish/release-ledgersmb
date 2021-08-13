@@ -85,6 +85,7 @@ verify_dependencies() {
    verify_dependency "date"
    verify_dependency "createdb"
    verify_dependency "postgresql_autodoc"
+   verify_dependency "psql"
    verify_dependency "uuid"
    verify_dependency "docker"
 }
@@ -96,8 +97,8 @@ verify_release_key() {
 }
 
 failure_cleanup() {
-    $rm -rf "$our_workspace"
-    $rm -rf "$docker_workspace"
+    rm -rf "$our_workspace"
+    rm -rf "$docker_workspace"
     if [[ -n "$upload_staging" ]]
     then
         echo "cd '$upload_staging'
@@ -143,8 +144,8 @@ update_database_schema() {
      $sudo -u postgres $psql -d ledgersmb < sql/Pg-database.sql && \
      ( for script in $($grep -vE '^#|^$' sql/changes/LOADORDER | $sed -e 's/!//') ; do $sudo -u postgres psql -d ledgersmb < sql/changes/$script ; done ) && \
      ( for script in $($grep -vE '^#|^$' sql/modules/LOADORDER | $sed -e 's/!//') ; do sudo -u postgres $psql -d ledgersmb < sql/modules/$script ; done ) && \
-     cd doc/database && \
-     $postgresql_autodoc -h localhost -d ledgersmb -U postgres --password=postgres && \
+     ( cd doc/database && \
+       $postgresql_autodoc -h localhost -d ledgersmb -U postgres --password=postgres ) && \
      $git add --all doc/database && $git commit -m "* Automated release schema update" ) \
     || fail "Failed to update database schema documentation"
 }
@@ -290,6 +291,7 @@ put 'ledgersmb-$release_version.tar.gz.asc'
 put 'ledgersmb-$release_version.tar.gz'
 " | $sftp -b - "lsmb-uploader@download.ledgersmb.org") \
      || fail "Failed to upload files to download.ledgersmb.org!"
+}
 
 publish_docker_images() {
     ($sudo $docker login &&
@@ -506,7 +508,7 @@ EOF
 )"
 EOT
 
-$rm -rf "$our_workspace"
-$rm -rf "$docker_workspace"
+rm -rf "$our_workspace"
+rm -rf "$docker_workspace"
 
 exit 0
