@@ -11,10 +11,21 @@ gpg_local_socket=$(gpgconf --list-dir agent-extra-socket)
 gpg_remote_socket=$(ssh releaser@releaser.local gpgconf --list-dir agent-socket)
 
 cat files/pubkey.asc | ssh releaser@releaser.local gpg --import
-ssh releaser@releaser.local "ssh-keyscan github.com > ~/.ssh/known_hosts"
-ssh releaser@releaser.local "ssh-keyscan download.ledgersmb.org >> ~/.ssh/known_hosts"
-ssh releaser@releaser.local "ssh-keyscan docs.ledgersmb.org >> ~/.ssh/known_hosts"
-ssh releaser@releaser.local "touch ledgersmb-release-tools ; rm -rf ledgersmb-release-tools"
-ssh releaser@releaser.local git clone git@github.com:ledgersmb/ledgersmb-release-tools
-ssh releaser@releaser.local "mkdir ~/bin ; ln -sf ~/ledgersmb-release-tools/publish/release-ledgersmb ~/ledgersmb-release-tools/notify/release-notifications.sh ~/bin/"
+ssh releaser@releaser.local <<-EOF
+set -xeo pipefail
+
+sudo service docker start
+ssh-keyscan github.com > ~/.ssh/known_hosts
+ssh-keyscan download.ledgersmb.org >> ~/.ssh/known_hosts
+ssh-keyscan docs.ledgersmb.org >> ~/.ssh/known_hosts
+touch ledgersmb-release-tools
+
+rm -rf ledgersmb-release-tools
+git clone git@github.com:ledgersmb/ledgersmb-release-tools
+
+mkdir -p ~/bin
+ln -sf ~/ledgersmb-release-tools/publish/release-ledgersmb ~/ledgersmb-release-tools/notify/release-notifications.sh ~/bin/
+
+EOF
+
 ssh -R $gpg_remote_socket:$gpg_local_socket releaser@releaser.local
