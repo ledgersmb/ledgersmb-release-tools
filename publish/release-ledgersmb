@@ -433,7 +433,7 @@ staging_uuid=$($uuid)
 upload_staging="$dl_base_dir/../staging/$staging_uuid"
 stage_files_dl
 
-staged_artifact="https://download.ledgersmb.org/staging/$staging_uuid/ledgersmb-$releaese_version.tar.gz"
+staged_artifact="https://download.ledgersmb.org/staging/$staging_uuid/ledgersmb-$release_version.tar.gz"
 if [[ "$tag_release" == "Y" ]]; then
     build_docker_images
 fi
