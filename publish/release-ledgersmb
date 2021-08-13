@@ -136,8 +136,8 @@ update_database_schema() {
 update_translations() {
    (cd "$our_workspace/$checkout_dir" && \
     $tx pull -f -a && utils/devel/rebuild_pot.sh && \
-    ($find . -name '*~' -exec rm \{} + ) && \
-    ($find . -name '*.orig' -exec rm \{} + ) && \
+    ($find . -name '*~' -exec rm '{}' + ) && \
+    ($find . -name '*.orig' -exec rm '{}' + ) && \
     $git add --all locale && $git commit -m "* Automated release language update" ) \
    || fail "Failed to update branch ($branch) translations"
 }
