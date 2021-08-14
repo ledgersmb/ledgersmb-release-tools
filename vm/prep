@@ -14,6 +14,8 @@ cat files/pubkey.asc | ssh releaser@releaser.local gpg --import
 ssh releaser@releaser.local <<-EOF
 set -xeo pipefail
 
+# Docker, IPv6 and DNS resolution inside a VM don't seem to go well together
+sudo bash -c "echo 1 >/proc/sys/net/ipv6/conf/all/disable_ipv6"
 sudo service docker start
 ssh-keyscan github.com > ~/.ssh/known_hosts
 ssh-keyscan download.ledgersmb.org >> ~/.ssh/known_hosts
