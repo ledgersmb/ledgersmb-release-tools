@@ -1,10 +1,39 @@
 #!/bin/bash
 
+
+while [[ $# -ne 0 ]]
+do
+    case "$1" in
+        --release-type)
+            release_type="$2"
+            shift 2;
+            ;;
+        --branch)
+            branch="$2"
+            shift 2;
+            ;;
+        *)
+            echo "Unknown argument $1 ignored"
+            shift
+            ;;
+    esac
+done
+
 # import some functions that we need, like reading values from our config file.
 
-[[ -f ~/ledgersmb-release-parameters ]] \
-   && source ~/ledgersmb-release-parameters
+if [[ -n "$branch" ]]
+then
+    rel_params=~/ledgersmb-$branch-release-parameters
+else
+    rel_params=~/ledgersmb-release-parameters
+fi
 
+if [[ -f $rel_params ]]
+then
+    source ~/ledgersmb-$branch-release-parameters
+else
+    echo "Missing release parameters file '$rel_params'"
+fi
 
 export release_version release_type release_date release_branch
 export release_changelog release_sha256sums

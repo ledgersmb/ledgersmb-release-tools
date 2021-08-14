@@ -4,19 +4,13 @@
 # automatically convert tag_release to upper case
 typeset -u tag_release
 
-if [[ "$1" == "--force-accept-version-update" ]]; then
-   shift
-   force_accept_version_update=yes
-fi
-
 URL="git@github.com:ledgersmb/LedgerSMB.git"
 URL_docker="git@github.com:ledgersmb/ledgersmb-docker.git"
 GH_api="https://api.github.com/repos"
 #URL=/home/ehuelsmann/releases/lsmb-repo-2
-branch="$1"
-release_version="$2"
-new_dev_version="$3"
-sf_user="$4"
+branch=""
+release_version=""
+new_dev_version=""
 checkout_dir="LedgerSMB"
 #release_key="8DA0AF10"
 #release_key="39A629558DA0AF10"
@@ -27,24 +21,77 @@ dl_untagged_dir="Beta Releases"
 pod_base_dir="/www/vhosts/docs.ledgersmb.org/public_html/perl-api"
 tag_release="Y"
 
-if [[ ! -f ~/.lsmb-github-releases ]]; then
-   fail "Missing configuration file ~/.lsmb-github-releases!"
-else
-   source ~/.lsmb-github-releases
+help() {
+    name=$(basename $0)
+    cat - <<EOF
+Usage:
+   $name [options] <branch> <version> <next-version>
 
-   [[ -n "$github_user" ]] || fail "variable 'github_user' not defined! please define in ~/.lsmb-github-releases"
-   [[ -n "$github_token" ]] || fail "variable 'github_token' not defined! please define in ~/.lsmb-github-releases"
-fi
+Parameters:
+  branch       The branch to create the release from
+  version      The version number of the release
+  next-version The version to set on the release branch after release
 
-if [[ -n $(echo "$release_version" | grep -- "-") ]]; then
-   echo "Version modifier detected (rc/beta/...).
+Options:
+  --debug      Runs the script in debugging mode (very, very verbose)
+  --force-accept-version-update
+
+EOF
+}
+
+process_arguments() {
+
+    stop_processing=
+    while [[ $# -ne 0 && -z "$stop_processing" ]]
+    do
+        case "$1" in
+            --force-accept-version-update)
+                force_accept_version_update=yes
+                shift
+                ;;
+            --debug)
+                debug_script=yes
+                shift
+                ;;
+            --*)
+                echo "Error: unknown script argument $1"
+                exit
+                ;;
+            *)
+                stop_processing="yes"
+                ;;
+        esac
+    done
+
+    if [[ $# -eq 3 ]]
+    then
+        branch="$1"
+        release_version="$2"
+        new_dev_version="$3"
+    else
+        echo "Error: Incorrect number of arguments: $# found, 3 expected"
+        help
+        exit 1
+    fi
+}
+
+load_configuration() {
+    if [[ ! -f ~/.lsmb-github-releases ]]; then
+        fail "Missing configuration file ~/.lsmb-github-releases!"
+    else
+        source ~/.lsmb-github-releases
+
+        [[ -n "$github_user" ]] || fail "variable 'github_user' not defined! please define in ~/.lsmb-github-releases"
+        [[ -n "$github_token" ]] || fail "variable 'github_token' not defined! please define in ~/.lsmb-github-releases"
+    fi
+
+    if [[ -n $(echo "$release_version" | grep -- "-") ]]; then
+        echo "Version modifier detected (rc/beta/...).
 Modified versions don't get tagged. Force tag? [y/N]"
-   read tag_release
-fi
+        read tag_release
+    fi
+}
 
-if [[ -n "$DEBUG_RELEASE" ]]; then
-   set -x
-fi
 
 fail() {
    echo -e "$1\n" >&2
@@ -383,7 +430,16 @@ upload_pod() {
         || fail "Failed to upload Perl API docs!"
 }
 
+
+process_arguments "$@"
+load_configuration
 verify_dependencies
+
+if [[ -n "$debug_script" ]]
+then
+    set -x
+fi
+
 verify_release_key
 setup_workspace
 populate_workspace
@@ -496,7 +552,7 @@ release_version=$release_version
 release_date=$($date --iso --utc)
 " > ~/ledgersmb-release-parameters
 
-$cat <<EOT >> ~/ledgersmb-release-parameters
+$cat <<EOT >> ~/ledgersmb-$branch-release-parameters
 release_sha256sums="\$($cat <<'EOF'
 $extracted_sha256sums
 EOF
