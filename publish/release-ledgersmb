@@ -5,10 +5,12 @@
 typeset -u tag_release
 
 URL="git@github.com:ledgersmb/LedgerSMB.git"
+addn_URL=""
 URL_docker="git@github.com:ledgersmb/ledgersmb-docker.git"
 GH_api="https://api.github.com/repos"
 #URL=/home/ehuelsmann/releases/lsmb-repo-2
 branch=""
+source_branch=""
 release_version=""
 new_dev_version=""
 checkout_dir="LedgerSMB"
@@ -25,14 +27,16 @@ help() {
     name=$(basename $0)
     cat - <<EOF
 Usage:
-   $name [options] <branch> <version> <next-version>
+   $name [options] <branch>[:<src-branch>] <version> <next-version>
 
 Parameters:
-  branch       The branch to create the release from
+  branch       The branch to create the release on
+  src-branch   (optional) Branch with additional commits to include
   version      The version number of the release
   next-version The version to set on the release branch after release
 
 Options:
+  --addn-repo  Additional repo, in case <src-branch> is not in the main repo
   --debug      Runs the script in debugging mode (very, very verbose)
   --force-accept-version-update
 
@@ -45,12 +49,16 @@ process_arguments() {
     while [[ $# -ne 0 && -z "$stop_processing" ]]
     do
         case "$1" in
-            --force-accept-version-update)
-                force_accept_version_update=yes
-                shift
+            --addn-repo)
+                addn_URL="$2"
+                shift 2
                 ;;
             --debug)
                 debug_script=yes
+                shift
+                ;;
+            --force-accept-version-update)
+                force_accept_version_update=yes
                 shift
                 ;;
             --*)
@@ -72,6 +80,13 @@ process_arguments() {
         echo "Error: Incorrect number of arguments: $# found, 3 expected"
         help
         exit 1
+    fi
+    if [[ "$branch" == *":"* ]]
+    then
+        source_branch=${branch#*:}
+        branch=${branch%:*}
+    else
+        source_branch="$branch"
     fi
 }
 
@@ -164,17 +179,33 @@ setup_workspace() {
 }
 
 populate_workspace() {
-   ( cd $our_workspace && \
-    $git clone --recursive --depth=10 --single-branch --branch "$branch" "$URL" "$checkout_dir" ) \
-   || fail "Failed to check out branch '$branch' from '$URL'!"
-   if test -e "$our_workspace/$checkout_dir/LedgerSMB.pm" ;
-   then
-     LedgerSMBpm_path="LedgerSMB.pm"
-   else
-     LedgerSMBpm_path="lib/LedgerSMB.pm"
-   fi
-   echo "LedgerSMB.pm found at $LedgerSMBpm_path"
-   #cp $our_workspace/$checkout_dir/conf/ledgersmb.conf.default $our_workspace/$checkout_dir/ledgersmb.conf 2>/dev/null
+    trap 'fail "Failed to check out branch ''$branch'' from ''$URL''!"' ERR
+
+    olddir=$PWD
+    cd $our_workspace
+    $git clone --recursive --depth=50 --single-branch \
+         --branch "$branch" "$URL" "$checkout_dir"
+
+    if [[ -n "$addn_URL" || "$branch" != "$source_branch" ]]
+    then
+        trap 'fail "Failed to pull ''$source_branch'' from ''$addn_URL''"' ERR
+
+        [[ -z "$addn_URL" ]] && addn_URL="$URL"
+        cd "$checkout_dir"
+        $git remote add alt "$addn_URL"
+        $git pull --ff-only alt "$source_branch"
+    fi
+
+    trap 'fail "Failed to check out branch ''$branch'' from ''$URL''!"' ERR
+    cd $olddir
+
+    if test -e "$our_workspace/$checkout_dir/LedgerSMB.pm" ;
+    then
+        LedgerSMBpm_path="LedgerSMB.pm"
+    else
+        LedgerSMBpm_path="lib/LedgerSMB.pm"
+    fi
+    echo "LedgerSMB.pm found at $LedgerSMBpm_path"
 }
 
 populate_docker_workspace() {
