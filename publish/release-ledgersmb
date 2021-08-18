@@ -22,6 +22,7 @@ dl_tagged_dir="Releases"
 dl_untagged_dir="Beta Releases"
 pod_base_dir="/www/vhosts/docs.ledgersmb.org/public_html/perl-api"
 tag_release="Y"
+with_docker=""
 
 help() {
     name=$(basename $0)
@@ -39,6 +40,12 @@ Options:
   --addn-repo  Additional repo, in case <src-branch> is not in the main repo
   --debug      Runs the script in debugging mode (very, very verbose)
   --force-accept-version-update
+  --with-*     Enable feature '*'
+  --without-*  Disable feature '*'
+
+Features:
+  docker       Publishes docker images
+               Tagged releases include this option; others don't
 
 EOF
 }
@@ -60,6 +67,32 @@ process_arguments() {
             --force-accept-version-update)
                 force_accept_version_update=yes
                 shift
+                ;;
+            --with-*)
+                option=${1#--with-}
+                shift
+                case "$option" in
+                    docker)
+                        with_docker="yes"
+                        ;;
+                    *)
+                        echo "Unrecognized option '$option'"
+                        exit 1
+                        ;;
+                esac
+                ;;
+            --without-*)
+                option=${1#--without-}
+                shift
+                case "$option" in
+                    docker)
+                        with_docker="no"
+                        ;;
+                    *)
+                        echo "Unrecognized option '$option'"
+                        exit 1
+                        ;;
+                esac
                 ;;
             --*)
                 echo "Error: unknown script argument $1"
@@ -104,6 +137,11 @@ load_configuration() {
         echo "Version modifier detected (rc/beta/...).
 Modified versions don't get tagged. Force tag? [y/N]"
         read tag_release
+    fi
+
+    if [[ "$tag_release" == "Y" && -z "$with_docker" ]]
+    then
+        with_docker="yes"
     fi
 }
 
@@ -474,10 +512,7 @@ fi
 verify_release_key
 setup_workspace
 populate_workspace
-
-if [[ "$tag_release" == "Y" ]]; then
-  populate_docker_workspace
-fi
+populate_docker_workspace
 
 if [[ -z $(echo "$release_version" | grep -- "-") ]]; then
     prj_sub_dir="$dl_tagged_dir"
@@ -492,7 +527,7 @@ then
   fi
 
   update_translations
-  if [[ "$tag_release" == "Y" ]]; then
+  if [[ "$with_docker" == "yes" ]]; then
     update_dockerfile
   fi
   detect_current_version
@@ -521,7 +556,7 @@ upload_staging="$dl_base_dir/../staging/$staging_uuid"
 stage_files_dl
 
 staged_artifact="https://download.ledgersmb.org/staging/$staging_uuid/ledgersmb-$release_version.tar.gz"
-if [[ "$tag_release" == "Y" ]]; then
+if [[ "$with_docker" == "yes" ]]; then
     build_docker_images
 fi
 
@@ -549,10 +584,13 @@ fi
 if [[ "$tag_release" == "Y" ]]; then
     echo "Pushing changes to repository"
     update_remote
-
+fi
+if [[ "$with_docker" == "yes" ]]
+then
     echo "Pushing docker updates"
     update_docker_remote
 fi
+
 
 # only after we published to 'download.ledgersmb.org',
 # update the docker files so they can download
@@ -566,7 +604,9 @@ if [[ "$tag_release" == "Y" ]]; then
     # we can't upload to GitHub if there's no tag...
     echo "Updating GitHub tag with attachments"
     publish_files_gh
-
+fi
+if [[ "$with_docker" == "yes" ]]
+then
     echo "Uploading Docker images"
     publish_docker_images
 fi
