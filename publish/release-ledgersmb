@@ -594,11 +594,6 @@ then
 fi
 
 
-# only after we published to 'download.ledgersmb.org',
-# update the docker files so they can download
-staging_dir=$(uuid)
-stage_files_dl
-
 if [[ "$tag_release" == "Y" ]]; then
     echo "Uploading POD documentation"
     upload_pod
