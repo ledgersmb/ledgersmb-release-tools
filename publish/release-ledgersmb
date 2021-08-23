@@ -562,6 +562,23 @@ if [[ "$with_docker" == "yes" ]]; then
     build_docker_images
 fi
 
+
+$cat <<EOT > ~/ledgersmb-$branch-release-parameters
+release_branch=$branch
+release_version=$release_version
+release_date=$($date --iso --utc)
+release_sha256sums="\$($cat <<'EOF'
+$extracted_sha256sums
+EOF
+)"
+
+release_changelog="\$($cat <<'EOF'
+$extracted_changelog
+EOF
+)"
+EOT
+
+
 # We have the signed binaries now and are about to publish;
 # if anything goes wrong beyond this point, we need the
 # binaries to restart the process "by hand" or even to
@@ -613,24 +630,6 @@ publish_files_dl
 
 
 clear
-
-echo "
-release_branch=$branch
-release_version=$release_version
-release_date=$($date --iso --utc)
-" > ~/ledgersmb-release-parameters
-
-$cat <<EOT >> ~/ledgersmb-$branch-release-parameters
-release_sha256sums="\$($cat <<'EOF'
-$extracted_sha256sums
-EOF
-)"
-
-release_changelog="\$($cat <<'EOF'
-$extracted_changelog
-EOF
-)"
-EOT
 
 rm -rf "$our_workspace"
 rm -rf "$docker_workspace"
