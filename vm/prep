@@ -16,11 +16,10 @@ set -xeo pipefail
 
 # Docker, IPv6 and DNS resolution inside a VM don't seem to go well together
 sudo bash -c "echo 1 >/proc/sys/net/ipv6/conf/all/disable_ipv6"
-sudo service docker start
+sudo service docker restart
 ssh-keyscan github.com > ~/.ssh/known_hosts
 ssh-keyscan download.ledgersmb.org >> ~/.ssh/known_hosts
 ssh-keyscan docs.ledgersmb.org >> ~/.ssh/known_hosts
-touch ledgersmb-release-tools
 
 rm -rf ledgersmb-release-tools
 git clone git@github.com:ledgersmb/ledgersmb-release-tools
@@ -30,4 +29,5 @@ ln -sf ~/ledgersmb-release-tools/publish/release-ledgersmb ~/ledgersmb-release-t
 
 EOF
 
+cat ~/.ssh/known_hosts | ssh releaser@releaser.local bash -c 'cat - >>~/.ssh/known_hosts'
 ssh -R $gpg_remote_socket:$gpg_local_socket releaser@releaser.local
