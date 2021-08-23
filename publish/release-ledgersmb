@@ -448,7 +448,7 @@ publish_files_gh() {
          "$upload_url?name=ledgersmb-$release_version.tar.gz.asc" \
          -T $our_workspace/ledgersmb-$release_version.tar.gz.asc \
    || fail "Failed to upload signature file to GitHub!"
-l   $curl -X POST -H 'Content-Type: application/x-tar' $gh_auth \
+   $curl -X POST -H 'Content-Type: application/x-tar' $gh_auth \
          "$upload_url?name=ledgersmb-$release_version.tar.gz" \
          -T $our_workspace/ledgersmb-$release_version.tar.gz \
    || fail "Failed to upload tarball to GitHub!"
