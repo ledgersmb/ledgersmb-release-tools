@@ -56,6 +56,7 @@ upload ./files/ssh-config:/home/releaser/.ssh/config
 upload ./tmp/dot-lsmb-release:/home/releaser/.lsmb-release
 upload ./tmp/dot-lsmb-site-releases:/home/releaser/.lsmb-site-releases
 upload ./tmp/dot-lsmb-github-releases:/home/releaser/.lsmb-github-releases
+upload ./tmp/dot-lsmb-dockerhub-releases:/home/releaser/.lsmb-dockerhub-releases
 upload ./tmp/dot-transifexrc:/home/releaser/.transifexrc
 
 run-command \
