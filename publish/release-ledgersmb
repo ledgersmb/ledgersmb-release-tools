@@ -124,6 +124,8 @@ process_arguments() {
 }
 
 load_configuration() {
+    [[ -f ~/.lsmb-dockerhub-releases ]] && source ~/.lsmb-dockerhub-releases
+
     if [[ ! -f ~/.lsmb-github-releases ]]; then
         fail "Missing configuration file ~/.lsmb-github-releases!"
     else
@@ -410,7 +412,7 @@ put 'ledgersmb-$release_version.tar.gz'
 }
 
 publish_docker_images() {
-    ($sudo $docker login &&
+    ((echo $docker_password | $sudo $docker login -u $docker_user --password-stdin ) &&
      $docker image tag ledgersmb/ledgersmb:$branch ledgersmb/ledgersmb:$release_version && \
      ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
       || $docker image tag ledgersmb/ledgersmb:$branch ledgersmb/ledgersmb:latest ) && \
