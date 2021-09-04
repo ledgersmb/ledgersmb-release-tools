@@ -29,7 +29,7 @@ say 'Topic: ' . $topic;
 
 
 if ($ENV{release_type} eq 'unstable') {
-    if ($topic =~ m/(?<PREFIX>.*)(?<MATCH>| latest preview: [^|]*)(?<POSTFIX>.*)?/i) {
+    if ($topic =~ m/(?<PREFIX>.*)(?<MATCH>[|] latest preview: [^|]*)(?<POSTFIX>.*)?/i) {
         my $new_topic = $+{PREFIX} . "| latest preview: $ENV{release_version} " . ($+{POSTFIX} // '');
         $room->set_topic( $new_topic )->get;
     }
@@ -40,8 +40,8 @@ if ($ENV{release_type} eq 'unstable') {
     }
 }
 else {
-    if ($topic =~ m/(?<PREFIX>.*)(?<MATCH>| latest stable: [^|]*)(?<POSTFIX>.*)?/i) {
-        my $new_topic = $+{PREFIX} . "| latest stable: $release_version " . ($+{POSTFIX} // '');
+    if ($topic =~ m/(?<PREFIX>.*)(?<MATCH>[|] latest stable: [^|]*)(?<POSTFIX>.*)?/i) {
+        my $new_topic = $+{PREFIX} . "| latest stable: $ENV{release_version} " . ($+{POSTFIX} // '');
         $room->set_topic( $new_topic )->get;
     }
     else {
