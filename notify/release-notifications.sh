@@ -64,10 +64,6 @@ updateWikipedia() { # $1 = New Version     $2 = New Date
               "$release_type" "$1" "$2" "${cfgValue[wiki_User]}" "${cfgValue[wiki_Password]}"
 }
 
-updateIRC() {
-    $basedir/notification-helpers/release-irc.sh $release_type $release_version
-}
-
 updateMatrix() {
     MATRIX_USER="${cfgValue[matrix_User]}" MATRIX_PASSWORD="${cfgValue[matrix_Password]}" MATRIX_SERVER="${cfgValue[matrix_Server]}" \
     MATRIX_ROOM="${cfgValue[matrix_Room]}}" release_version=$release_version release_type=$release_type $basedir/notification-helpers/release-matrix
@@ -119,7 +115,6 @@ sendEmail() {
 RunAllUpdates() {
     if ! [[ "$release_type" == "oldstable" ]]; then
         #updateWikipedia "$release_version" "$release_date";
-        #updateIRC;
         updateMatrix;
     fi
     composeReleaseStatement;

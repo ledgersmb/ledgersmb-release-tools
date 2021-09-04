@@ -24,8 +24,7 @@ Supported options:
   --mail-notls        do not use TLS for sending mail
   --name <name>       name to be used for git and announcement
                       mail 'From:'
-  --user <username>   username to be used for Docker, GitHub, IRC
-                      and Wikipedia
+  --user <username>   username to be used for Docker, GitHub and Wikipedia
 
 EOF
 
@@ -134,9 +133,6 @@ declare -A conf=(
 
     [GithubToken]=None
     [GithubUser]="$user"
-
-    [IrcUser]="$user"
-    [IrcPassword]=Doe
 
     [MatrixPassword]=Doe
     [MatrixServer]="matrix.org"
