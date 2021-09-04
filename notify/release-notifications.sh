@@ -115,14 +115,16 @@ sendEmail() {
 }
 
 RunAllUpdates() {
-    if ! [[ "$release_type" == "oldstable" ]]; then
-        updateWikipedia
-        updateMatrix;
-    fi
     composeReleaseStatement;
+    sendEmail;
     updateGitHub;
     updateSite;
-    sendEmail;
+
+    if ! [[ "$release_type" == "oldstable" ]]; then
+        updateMatrix;
+        updateWikipedia
+        # wikipedia last, because it shows a validation request
+    fi
 }
 
 
