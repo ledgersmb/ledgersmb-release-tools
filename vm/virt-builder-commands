@@ -19,7 +19,7 @@ run-command pip3 install matrix-client
 
 
 # Net::Async::Matrix for the matrix announcement
-run-command cpanm --notest Pod::ProjectDocs Workflow Net::Async::Matrix
+run-command cpanm --notest Pod::ProjectDocs Workflow Net::Async::Matrix MediaWiki::API
 
 copy-in ./files/postgresql.list:/etc/apt/sources.list.d/
 copy-in ./files/postgresql-key.asc:/etc/apt/trusted.gpg.d/
