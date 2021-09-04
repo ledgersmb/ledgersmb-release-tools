@@ -25,7 +25,7 @@ set -e
 # set -x
 
 verbose=
-#--verbose
+#verbose=--verbose
 
 ssh-add -L > ./tmp/authorized_keys
 virt-builder $verbose \
@@ -34,5 +34,5 @@ virt-builder $verbose \
      --arch amd64 \
      --size 20G \
      --commands-from-file virt-builder-commands \
-     debian-9
+     debian-10
 

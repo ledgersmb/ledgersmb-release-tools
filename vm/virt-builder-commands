@@ -3,8 +3,12 @@
 root-password password:root
 hostname releaser.local
 run-command fstrim -a -v
+run-command DEBIAN_FRONTEND=noninteractive dpkg-reconfigure grub-pc
 
 copy-in ./files/00recommended:/etc/apt/apt.conf.d/
+
+run-command apt-get -y --allow-releaseinfo-change update
+run-command DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -q -y -o Dpkg::Options::=--force-confnew
 
 install curl,dhcpcd5,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl,libmime-tools-perl,libemail-sender-perl,libemail-stuffer-perl,libauthen-sasl-perl,libc6-dev,g++,libc++-dev,transifex-client,uuid
 copy-in ./files/motd:/etc/
@@ -29,7 +33,7 @@ run-command apt-key add /etc/apt/trusted.gpg.d/docker.asc
 
 
 update
-install postgresql-13,npm,docker-ce
+install postgresql-13,nodejs,docker-ce
 
 # Java JRE is required for building Dojo on 1.4 and 1.5
 install default-jre-headless
