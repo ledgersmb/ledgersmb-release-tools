@@ -19,3 +19,6 @@ Password            = @@MatrixPassword@@
 Room                = #ledgersmb:matrix.org
 
 
+[wiki]
+User                = @@WikipediaUser@@
+Password            = @@WikipediaPassword@@

@@ -1,0 +1,230 @@
+#!/usr/bin/perl
+
+ use v5.20;
+ use strict;
+ use utf8;
+ use warnings;
+
+ use Getopt::Long;
+ use MediaWiki::Bot;
+ use Text::Diff;
+ use URL::Encode qw(url_encode_utf8);
+
+ #use LWP::ConsoleLogger::Everywhere ();
+
+my %monthnames = (
+  '01' => 'January',
+  '02' => 'February',
+  '03' => 'March',
+  '04' => 'April',
+  '05' => 'May',
+  '06' => 'June',
+  '07' => 'July',
+  '08' => 'August',
+  '09' => 'September',
+  '10' => 'October',
+  '11' => 'November',
+  '12' => 'December',
+);
+
+
+GetOptions(
+   'dryrun' => \my $dryrun,
+   'date=s'   => \(my $release_date = `date --utc +%Y-%m-%d`)
+);
+my ($release_type, $release_version) = @ARGV;
+
+die "Script does not support non-stable version updates yet!"
+   unless $release_type eq 'stable';
+
+die "Script requires two arguments: ./update-wikipedia [release-type] [release-version]"
+   unless defined $release_version && $release_version =~ /\d+\.\d+\.\d+/;
+
+die "Release date $release_date does not follow format YYYY-MM-DD"
+   unless ($release_date =~ /(?<year_full>\d\d\d\d)-(?<monthnum_full>\d\d)-(?<day_full>\d\d)/);
+
+die "Environment variables WIKI_USER and WIKI_PASSWORD expected, but not defined"
+   unless defined $ENV{WIKI_USER} and defined $ENV{WIKI_PASSWORD};
+
+my %date_components = %+;
+$date_components{isodate} = $release_date;
+
+my $bot = MediaWiki::Bot->new(
+{
+ host => 'en.wikipedia.org',
+ assert => 'user',
+ protocol => 'https',
+ agent => "LedgerSMB release version update helper; contact $ENV{WIKI_USER} for comments",
+ path => 'w',
+# debug => 2,
+}
+);
+
+
+# Due to lack of support for "clientlogin" action in the bot,
+# we'll get a warning which makes the bot think we failed. Just trust
+# everything went fine...
+if (not $bot->login(
+        {
+            username   => $ENV{WIKI_USER},
+            password   => $ENV{WIKI_PASSWORD},
+#            do_sul     => 1,
+            autoconfig => 0,
+        })) {
+    die "Login failed. Please be sure to use the correct case for the username!";
+}
+
+my %stable_updates = (
+   'en.wikipedia.org' => {
+      'LedgerSMB' => [
+         '| latest release version = [%version%]',
+         '| latest release date = {{start date and age|[%year_full%]|[%monthnum_full%]|[%day_full%]}}',
+      ],
+      'Comparison of accounting software' => [
+         "[[LedgerSMB]]\n| Perl\n| 2006-09-06\n| [%version%]\n| [%isodate%]",
+      ],
+      'List of ERP software packages' => [
+         '| [[LedgerSMB]] || [[Perl]], PostgreSQL  || [[GPL]]|| Double entry accounting and ERP system (2006 fork of [[SQL-Ledger]]) || Worldwide ||[%year_full%] [%monthname_full%] ([%version%])',
+      ],
+   },
+   'es.wikipedia.org' => {
+      'LedgerSMB' => [
+         '| última_versión = [%version%]',
+         '| fecha_última_versión = {{fecha de lanzamiento|[%day_full%]|[%monthnum_full%]|[%year_full%]}}',
+      ],
+   },
+   'ja.wikipedia.org' => {
+      'ERPソフトウェアパッケージの一覧' => [
+        "|LedgerSMB\n|[[Perl]], PostgreSQL\n|[[GNU General Public License|GPL]]\n|複式簿記とERPシステム（2006年の[[SQL-Ledger]]のフォーク）\n|全世界\n|[%year_full%] [%monthname_full%] ([%version%])\n|-"
+      ],
+   },
+   'ru.wikipedia.org' => {
+      'Проект:Информационные технологии/Списки/Список ERP-систем' => [
+         '| [[LedgerSMB]] || [[GPL]]  ||   || [[Perl]]   || [[PostgreSQL]]  || [%version%] / [%monthname_full%] [%day_short%], [%year_full%] '
+      ],
+   }
+);
+
+my %re = (
+  year_full => qr/(\d\d)?\d\d/,
+  year_short => qr/\d\d/,
+  monthnum_full => qr/\d\d/,
+  monthnum_short => qr/\d?\d/,
+  monthname_full => qr/\w+/,
+  day_full => qr/\d\d/,
+  day_short => qr/\d?\d/,
+  isodate => qr/\d\d\d\d-\d\d-\d\d/,
+  version => qr/\d+\.\d+\.\d+(-[a-zA-Z0-9]+)?/,
+);
+
+
+
+sub replacement {
+   my $arg = shift;
+   my $rv;
+
+   return $date_components{$arg}
+      if defined $date_components{$arg};
+
+   if ($arg eq 'monthname_full') {
+      return $monthnames{$date_components{monthnum_full}};
+   }
+   elsif ($arg eq 'monthname_short') {
+      return substr($monthnames{$date_components{monthnum_full}},0,3);
+   }
+   elsif ($arg eq 'version') {
+      return $release_version;
+   }
+   elsif ($arg =~ /(monthnum|day)_short/) {
+      return ($date_components{"$1_full"}*1);
+   }
+   elsif ($arg eq 'year_short') {
+      return substr($date_components{year_full},2,2);
+   }
+
+   return '!! No Match !!';
+}
+
+
+my (@skipped_pages, @edited_pages, @failed_updates, @failed_matches);
+
+for my $wiki (sort keys %stable_updates) {
+
+    $bot->set_wiki({ host => $wiki });
+    for my $page (sort keys $stable_updates{$wiki}->%*) {
+        my $page_url =
+            "https://$wiki/wiki/" . url_encode_utf8($page =~ s/ /_/gr);
+        my $text = $bot->get_text( $page );
+        my $orig = $text;
+        my $new  = $text;
+
+        for my $edit ($stable_updates{$wiki}->{$page}->@*) {
+
+
+            my $page_re = quotemeta($edit);
+            my $o = quotemeta(quotemeta('[%'));
+            my $c = quotemeta(quotemeta('%]'));
+            $page_re =~ s/$o(.*?)$c/$re{$1}/ge;
+            my $repl = $edit;
+            $o = quotemeta('[%');
+            $c = quotemeta('%]');
+            $repl  =~ s/$o(.*?)$c/replacement($1)/ge;
+
+            if ($text =~ $page_re) {
+                $new =~ s/$page_re/$repl/g;
+            }
+            else {
+                say "Fail!";
+                push @failed_matches, $page_url;
+            }
+        }
+
+        if ($orig eq $new) {
+            say "No edits required for $page_url";
+
+            push @skipped_pages, $page_url;
+        }
+        else {
+            say "Delta for $page_url:";
+            say diff \$orig, \$new, { STYLE => 'Unified' };
+
+            if (not $dryrun
+                and not $bot->edit(
+                    {
+                        assertion => 'user',
+                        page => $page,
+                        text => $new,
+                        summary => 'LedgerSMB release version update',
+                        minor => 1,
+                        bot => 0 })) {
+                say "Error trying to update $wiki($page): $bot->{error}->{code} -- $bot->{error}->{details}";
+                push @failed_updates, $page_url;
+            } elsif ($dryrun) {
+                say "Skipping actual page update for $page_url";
+                push @skipped_pages, $page_url;
+            } else {
+                push @edited_pages, $page_url;
+            }
+        }
+    }
+}
+
+
+if (@skipped_pages) {
+    say "\nSkipped pages:";
+    say " - $_" for (@skipped_pages);
+}
+if (@failed_updates) {
+    say "\nFailed page updates:";
+    say " - $_" for (@failed_updates);
+}
+if (@failed_matches) {
+    say "\nFailed page edits:";
+    say " - $_" for (@failed_matches);
+}
+if (@edited_pages) {
+    say "\nEdited pages (please verify in-browser):";
+    say " - $_" for (@edited_pages);
+}
+
+exit 0;
