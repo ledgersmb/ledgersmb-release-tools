@@ -64,6 +64,7 @@ upload ./tmp/dot-lsmb-dockerhub-releases:/home/releaser/.lsmb-dockerhub-releases
 upload ./tmp/dot-transifexrc:/home/releaser/.transifexrc
 
 run-command \
+   sed -i 's/^AcceptEnv /#AcceptEnv /' /etc/ssh/sshd_config ; \
    chown -R releaser:releaser /home/releaser/ ; \
    chmod -R u=rwX,go= /home/releaser/.ssh /home/releaser/.gnupg \
              /home/releaser/.lsmb-release /home/releaser/.lsmb-github-releases \
