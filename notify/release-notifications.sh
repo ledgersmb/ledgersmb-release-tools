@@ -62,7 +62,7 @@ updateWikipedia() { # $1 = New Version     $2 = New Date
     # wikipedia-update.pl [boilerplate|Wikipage] [stable|preview] [NewVersion] [NewDate] [UserName Password]
     WIKI_PASSWORD="${cfgValue[wiki_Password]}" \
     WIKI_USER="${cfgValue[wiki_User]}" \
-    $basedir/notification-helpers/release-wikipedia.pl \
+    $basedir/notification-helpers/release-wikipedia \
               --date "$release_date" "$release_type" "$release_version"
 }
 
