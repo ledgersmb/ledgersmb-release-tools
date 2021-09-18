@@ -10,7 +10,7 @@ copy-in ./files/00recommended:/etc/apt/apt.conf.d/
 run-command apt-get -y --allow-releaseinfo-change update
 run-command DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -q -y -o Dpkg::Options::=--force-confnew
 
-install curl,dhcpcd5,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl,libmime-tools-perl,libemail-sender-perl,libemail-stuffer-perl,libauthen-sasl-perl,libc6-dev,g++,libc++-dev,transifex-client,uuid,liburl-encode-perl,libtext-diff-perl
+install curl,dhcpcd5,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl,libmime-tools-perl,libemail-sender-perl,libemail-stuffer-perl,libauthen-sasl-perl,libc6-dev,g++,libc++-dev,transifex-client,uuid,liburl-encode-perl,libtext-diff-perl,libpod-projectdocs-perl
 copy-in ./files/motd:/etc/
 
 
@@ -18,9 +18,9 @@ run-command pip3 install --upgrade urllib3
 run-command pip3 install matrix-client
 
 
-# Net::Async::Matrix for the matrix announcement
+# Net::Async::Matrix for the matrix announcement (is available in Debian as-of Bullseye)
 # MediaWiki::Bot for the wikipedia updates
-run-command cpanm --notest Pod::ProjectDocs Workflow Net::Async::Matrix MediaWiki::API https://cpan.metacpan.org/authors/id/S/SE/SETH/MediaWiki-Bot-5.006004-TRIAL.tar.gz
+run-command cpanm --notest Workflow Net::Async::Matrix MediaWiki::Bot
 
 copy-in ./files/postgresql.list:/etc/apt/sources.list.d/
 copy-in ./files/postgresql-key.asc:/etc/apt/trusted.gpg.d/
