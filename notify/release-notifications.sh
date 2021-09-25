@@ -68,7 +68,7 @@ updateWikipedia() { # $1 = New Version     $2 = New Date
 
 updateMatrix() {
     MATRIX_USER="${cfgValue[matrix_User]}" MATRIX_PASSWORD="${cfgValue[matrix_Password]}" MATRIX_SERVER="${cfgValue[matrix_Server]}" \
-    MATRIX_ROOM="${cfgValue[matrix_Room]}}" release_version=$release_version release_type=$release_type $basedir/notification-helpers/release-matrix
+    MATRIX_ROOM="${cfgValue[matrix_Room]}" release_version=$release_version release_type=$release_type $basedir/notification-helpers/release-matrix
 }
 
 composeReleaseStatement() {
