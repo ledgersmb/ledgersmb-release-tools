@@ -256,12 +256,12 @@ populate_docker_workspace() {
 
 update_database_schema() {
     (cd "$our_workspace/$checkout_dir" && \
-     $sudo -u postgres $psql -c "drop database if exists ledgersmb" && \
-     $sudo -u postgres $createdb ledgersmb && \
-     $sudo -u postgres $psql -c "alter role postgres password 'postgres'" && \
-     $sudo -u postgres $psql -d ledgersmb < sql/Pg-database.sql && \
-     ( for script in $($grep -vE '^#|^$' sql/changes/LOADORDER | $sed -e 's/!//') ; do $sudo -u postgres psql -d ledgersmb < sql/changes/$script ; done ) && \
-     ( for script in $($grep -vE '^#|^$' sql/modules/LOADORDER | $sed -e 's/!//') ; do sudo -u postgres $psql -d ledgersmb < sql/modules/$script ; done ) && \
+     $sudo -Hiu postgres $psql -c "drop database if exists ledgersmb" && \
+     $sudo -Hiu postgres $createdb ledgersmb && \
+     $sudo -Hiu postgres $psql -c "alter role postgres password 'postgres'" && \
+     $sudo -Hiu postgres $psql -d ledgersmb < sql/Pg-database.sql && \
+     ( for script in $($grep -vE '^#|^$' sql/changes/LOADORDER | $sed -e 's/!//') ; do $sudo -Hiu postgres psql -d ledgersmb < sql/changes/$script ; done ) && \
+     ( for script in $($grep -vE '^#|^$' sql/modules/LOADORDER | $sed -e 's/!//') ; do $sudo -Hiu postgres $psql -d ledgersmb < sql/modules/$script ; done ) && \
      ( cd doc/database && \
        $postgresql_autodoc -h localhost -d ledgersmb -U postgres --password=postgres ) && \
      $git add --all doc/database && $git commit -m "* Automated release schema update" ) \
