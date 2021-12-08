@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 fail() {
    echo "$@"
    exit 1
@@ -22,7 +24,7 @@ password=$site_password
 release_version=$1
 release_branch=$2
 
-release_text=$(cat ~/ledgersmb-release-text | sed -e ':a;N;s/\n/\\n/g;ba' | sed -e "s/\(Changelog for $release_version\)/\1\\\\n/")
+release_text=$(cat ~/ledgersmb-release-text | sed -e 's/"/\\"/g' | sed -e ':a;N;s/\n/\\n/g;ba' | sed -e "s/\(Changelog for $release_version\)/\1\\\\n/")
 release_branch_id=$(curl -s -g "https://ledgersmb.org/jsonapi/taxonomy_term/release?filter[title][condition][path]=name&filter[title][condition][operator]==&filter[title][condition][value]=$release_branch" | jq '.data[0].id')
 
 checkReleaseExists() {
