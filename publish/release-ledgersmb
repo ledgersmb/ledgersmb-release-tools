@@ -629,9 +629,11 @@ prj_url_dir=$(echo "$prj_sub_dir" | sed -e 's/ /%20/g')
 publish_files_dl
 
 
-clear
-
 rm -rf "$our_workspace"
 rm -rf "$docker_workspace"
+
+
+echo "DONE -- release successful"
+
 
 exit 0
