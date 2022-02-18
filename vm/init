@@ -131,6 +131,9 @@ declare -A conf=(
     [GitUsername]="$name"
     [GitUsermail]="$mail"
 
+    [GhcrToken]=None
+    [GhcrUser]="$user"
+
     [GithubToken]=None
     [GithubUser]="$user"
 

@@ -125,6 +125,7 @@ process_arguments() {
 
 load_configuration() {
     [[ -f ~/.lsmb-dockerhub-releases ]] && source ~/.lsmb-dockerhub-releases
+    [[ -f ~/.lsmb-ghcr-releases ]] && source ~/.lsmb-ghcr-releases
 
     if [[ ! -f ~/.lsmb-github-releases ]]; then
         fail "Missing configuration file ~/.lsmb-github-releases!"
@@ -424,6 +425,20 @@ publish_docker_images() {
     || fail "Failed to publish docker images"
 }
 
+publish_ghcr_images() {
+    ((echo $ghcr_token | $sudo $docker login ghcr.io -u $ghcr_user --password-stdin ) &&
+     $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:$branch && \
+     $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:$release_version && \
+     ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
+      || $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:latest ) && \
+     $sudo $docker image push ghcr.io/ledgersmb/ledgersmb:$branch && \
+     $sudo $docker image push ghcr.io/ledgersmb/ledgersmb:$release_version && \
+     ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
+      || $sudo $docker image push ghcr.io/ledgersmb/ledgersmb:latest)
+    ) \
+    || fail "Failed to publish GitHub Container Repository images"
+}
+
 publish_files_dl() {
     (cd "$our_workspace" && \
      echo "cd '$dl_base_dir/$prj_sub_dir'
@@ -632,6 +647,11 @@ publish_files_dl
 rm -rf "$our_workspace"
 rm -rf "$docker_workspace"
 
+if [[ "$with_docker" == "yes" ]]
+then
+    echo "Uploading GitHub Container Repository images"
+    publish_ghcr_images
+fi
 
 echo "DONE -- release successful"
 
