@@ -413,28 +413,28 @@ put 'ledgersmb-$release_version.tar.gz'
 }
 
 publish_docker_images() {
-    ((echo $docker_password | $sudo $docker login -u $docker_user --password-stdin ) &&
+    ((echo $docker_password | $docker login -u $docker_user --password-stdin ) &&
      $docker image tag ledgersmb/ledgersmb:$branch ledgersmb/ledgersmb:$release_version && \
      ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
       || $docker image tag ledgersmb/ledgersmb:$branch ledgersmb/ledgersmb:latest ) && \
-     $sudo $docker image push ledgersmb/ledgersmb:$branch && \
-     $sudo $docker image push ledgersmb/ledgersmb:$release_version && \
+     $docker image push ledgersmb/ledgersmb:$branch && \
+     $docker image push ledgersmb/ledgersmb:$release_version && \
      ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
-      || $sudo $docker image push ledgersmb/ledgersmb:latest)
+      || $docker image push ledgersmb/ledgersmb:latest)
     ) \
     || fail "Failed to publish docker images"
 }
 
 publish_ghcr_images() {
-    ((echo $ghcr_token | $sudo $docker login ghcr.io -u $ghcr_user --password-stdin ) &&
+    ((echo $ghcr_token | $docker login ghcr.io -u $ghcr_user --password-stdin ) &&
      $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:$branch && \
      $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:$release_version && \
      ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
       || $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:latest ) && \
-     $sudo $docker image push ghcr.io/ledgersmb/ledgersmb:$branch && \
-     $sudo $docker image push ghcr.io/ledgersmb/ledgersmb:$release_version && \
+     $docker image push ghcr.io/ledgersmb/ledgersmb:$branch && \
+     $docker image push ghcr.io/ledgersmb/ledgersmb:$release_version && \
      ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
-      || $sudo $docker image push ghcr.io/ledgersmb/ledgersmb:latest)
+      || $docker image push ghcr.io/ledgersmb/ledgersmb:latest)
     ) \
     || fail "Failed to publish GitHub Container Repository images"
 }
@@ -638,6 +638,9 @@ if [[ "$with_docker" == "yes" ]]
 then
     echo "Uploading Docker images"
     publish_docker_images
+
+    echo "Uploading GitHub Container Repository images"
+    publish_ghcr_images
 fi
 
 prj_url_dir=$(echo "$prj_sub_dir" | sed -e 's/ /%20/g')
@@ -646,12 +649,6 @@ publish_files_dl
 
 rm -rf "$our_workspace"
 rm -rf "$docker_workspace"
-
-if [[ "$with_docker" == "yes" ]]
-then
-    echo "Uploading GitHub Container Repository images"
-    publish_ghcr_images
-fi
 
 echo "DONE -- release successful"
 
