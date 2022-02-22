@@ -4,7 +4,8 @@ set -x
 set -e
 set -o pipefail
 
-ssh-keygen -f "$HOME/.ssh/known_hosts" -R "releaser.local"
+ssh-keygen -R "releaser.local" -f "$HOME/.ssh/known_hosts"
+ssh-keygen -R "$(getent hosts releaser.local | cut -f1 -d' ')" -f "$HOME/.ssh/known_hosts"
 ssh-keyscan releaser.local >>~/.ssh/known_hosts
 
 gpg_local_socket=$(gpgconf --list-dir agent-extra-socket)
