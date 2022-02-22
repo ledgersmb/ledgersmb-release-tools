@@ -90,6 +90,9 @@ composeReleaseStatement() {
 	The release can be downloaded from GitHub at
 	   https://github.com/ledgersmb/LedgerSMB/releases/tag/$release_version
 
+	Or pulled from the GitHub Container Registry
+	   $ docker pull ghcr.io/ledgersmb/ledgersmb:$release_version
+
 	Or pulled from Docker Hub using the command
 	   $ docker pull ledgersmb/ledgersmb:$release_version
 
