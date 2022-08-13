@@ -1,0 +1,15 @@
+#!/usr/bin/bash
+
+set -x
+
+verbose="--verbose --no-delete-on-failure"
+virt-builder $verbose \
+     -o appliance.qcow2 \
+     --format qcow2 \
+     --arch amd64 \
+     --size 20G \
+     --commands-from-file virt-builder-commands \
+     debian-10
+
+virt-sparsify appliance.qcow2 sparse.qcow2
+xz sparse.qcow2
