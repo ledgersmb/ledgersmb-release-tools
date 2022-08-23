@@ -9,7 +9,7 @@ virt-install \
     --disk path=./tmp/releaser.qcow2,bus=virtio \
     --network default,model=virtio \
     --boot hd \
-    --os-type=generic
+    --osinfo=debian11
 
 virsh destroy releaser
 virsh undefine releaser
