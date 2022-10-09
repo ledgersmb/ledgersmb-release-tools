@@ -246,6 +246,12 @@ populate_workspace() {
     else
         LedgerSMBpm_path="lib/LedgerSMB.pm"
     fi
+    if test -e "$our_workspace/$checkout_dir/UI/src/locales" ;
+    then
+        locale_paths="locale UI/src/locales"
+    else
+        locale_paths="locale"
+    fi
     echo "LedgerSMB.pm found at $LedgerSMBpm_path"
 }
 
@@ -274,7 +280,7 @@ update_translations() {
     $tx pull -f -a && utils/devel/rebuild_pot.sh && \
     ($find . -name '*~' -exec rm '{}' + ) && \
     ($find . -name '*.orig' -exec rm '{}' + ) && \
-    $git add --all locale && $git commit -m "* Automated release language update" ) \
+    $git add --all $locale_paths && $git commit -m "* Automated release language update" ) \
    || fail "Failed to update branch ($branch) translations"
 }
 
