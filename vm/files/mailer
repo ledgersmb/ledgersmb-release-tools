@@ -181,10 +181,15 @@ my $parser = MIME::Parser->new;
 my $entity = $parser->parse(\*STDIN) or die "Failed to parse e-mail input\n";
 my $head   = $entity->head;
 my $body   = $entity->bodyhandle;
+
+chomp(my $from    = $head->get('From'));
+chomp(my $to      = $head->get('To'));
+chomp(my $subject = $head->get('Subject'));
+
 LedgerSMB::Mailer->new(
-    from    => $head->get('From'),
-    to      => $head->get('To'),
-    subject => $head->get('Subject'),
+    from    => $from,
+    to      => $to,
+    subject => $subject,
     message => $body->as_string,
     )->send;
 
