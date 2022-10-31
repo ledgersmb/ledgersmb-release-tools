@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -x
+set -e
+set -o pipefail
+
+gpg_local_socket=$(gpgconf --list-dir agent-extra-socket)
+gpg_remote_socket=$(ssh releaser@releaser.local gpgconf --list-dir agent-socket)
+
+ssh -R $gpg_remote_socket:$gpg_local_socket releaser@releaser.local
