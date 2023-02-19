@@ -461,7 +461,7 @@ publish_files_gh() {
    gh_auth="-u $github_user:$github_token"
    (cd "$our_workspace" && \
     $curl -X POST $gh_auth "$GH_api/ledgersmb/LedgerSMB/releases" \
-          -d "{\"tag_name\": \"$release_version\", \"name\": \"$release_version\", \"draft\": false, \"body\": \"todo\", \"name\": \"\"}" \
+          -d "{\"tag_name\": \"$release_version\", \"name\": \"$release_version\", \"draft\": true, \"body\": \"todo\", \"name\": \"\"}" \
        > release_create_response) \
    || fail "Failed to create GitHub release!"
    upload_url=$($jq -M -r '.upload_url' < $our_workspace/release_create_response | $sed -e 's/{.*//')
