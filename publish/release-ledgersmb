@@ -630,6 +630,7 @@ then
     echo "Pushing docker updates"
     update_docker_remote
 fi
+publish_files_dl
 
 
 if [[ "$tag_release" == "Y" ]]; then
@@ -649,8 +650,6 @@ then
     publish_ghcr_images
 fi
 
-prj_url_dir=$(echo "$prj_sub_dir" | sed -e 's/ /%20/g')
-publish_files_dl
 
 
 rm -rf "$our_workspace"
