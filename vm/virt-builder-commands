@@ -11,7 +11,7 @@ copy-in ./files/00recommended:/etc/apt/apt.conf.d/
 run-command apt-get -y --allow-releaseinfo-change update
 run-command DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -q -y -o Dpkg::Options::=--force-confnew
 
-install curl,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl,libmime-tools-perl,libemail-sender-perl,libemail-stuffer-perl,libauthen-sasl-perl,libc6-dev,g++,libc++-dev,transifex-client,uuid,liburl-encode-perl,libtext-diff-perl,libpod-projectdocs-perl,libfile-grep-perl
+install curl,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl,libmime-tools-perl,libemail-sender-perl,libemail-stuffer-perl,libauthen-sasl-perl,libc6-dev,g++,libc++-dev,uuid,liburl-encode-perl,libtext-diff-perl,libpod-projectdocs-perl,libfile-grep-perl
 copy-in ./files/motd:/etc/
 
 copy-in ./files/20-wired.network:/etc/systemd/network/
@@ -20,6 +20,8 @@ run-command apt-get purge -y ifupdown
 run-command systemctl enable systemd-networkd
 run-command systemctl enable systemd-resolved
 firstboot-command rm /etc/resolv.conf ; ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf ; reboot
+
+run-command curl -o- https://raw.githubusercontent.com/transifex/cli/master/install.sh | bash ; mv tx /usr/local/bin/
 run-command pip3 install --upgrade urllib3
 run-command pip3 install matrix-client
 
