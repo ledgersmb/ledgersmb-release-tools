@@ -1,5 +1,5 @@
 [https://www.transifex.com]
-hostname = https://www.transifex.com
+rest_hostname = https://rest.api.transifex.com
 password = @@TransifexPassword@@
 token = @@TransifexToken@@
 username = @@TransifexUser@@
