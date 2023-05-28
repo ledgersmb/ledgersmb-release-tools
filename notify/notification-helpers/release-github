@@ -8,6 +8,7 @@ fail() {
 }
 
 release_version=$1
+tag_URL=$2
 release_text=$(cat ~/ledgersmb-release-text | sed -e 's/"/\\"/g' | sed -e ':a;N;s/\n/\\n/g;ba')
 
 if [[ ! -f ~/.lsmb-github-releases ]]; then
@@ -24,7 +25,4 @@ GH_api="https://api.github.com/repos/ledgersmb/LedgerSMB"
 gh_auth="-u $github_user:$github_token"
 
 
-tag_URL=$(curl $gh_auth "$GH_api/releases/tags/$release_version" | jq -M -r '.url')
-
-#echo 
 curl -X PATCH $gh_auth $tag_URL -d "{ \"name\": \"$release_version\", \"prerelease\": false, \"draft\": false, \"tag_name\": \"$release_version\", \"body\": \"$release_text\" }"

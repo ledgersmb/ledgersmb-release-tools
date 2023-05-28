@@ -106,7 +106,7 @@ EOF
 }
 
 updateGitHub() {
-    $basedir/notification-helpers/release-github $release_version
+    $basedir/notification-helpers/release-github $release_version "$github_release_url"
 }
 
 updateSite() {
