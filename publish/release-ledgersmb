@@ -8,14 +8,11 @@ URL="git@github.com:ledgersmb/LedgerSMB.git"
 addn_URL=""
 URL_docker="git@github.com:ledgersmb/ledgersmb-docker.git"
 GH_api="https://api.github.com/repos"
-#URL=/home/ehuelsmann/releases/lsmb-repo-2
 branch=""
 source_branch=""
 release_version=""
 new_dev_version=""
 checkout_dir="LedgerSMB"
-#release_key="8DA0AF10"
-#release_key="39A629558DA0AF10"
 release_key="B7626A90FA0F515B323C8F5C39A629558DA0AF10"
 dl_base_dir="/www/vhosts/download.ledgersmb.org/public_html/f"
 dl_tagged_dir="Releases"
@@ -24,7 +21,13 @@ pod_base_dir="/www/vhosts/docs.ledgersmb.org/public_html/perl-api"
 tag_release="Y"
 with_docker=""
 
-help() {
+
+release_parameter_file=""
+github_release_url=""
+locale_paths=""
+LedgerSMBpm_path=""
+
+function help {
     name=$(basename $0)
     cat - <<EOF
 Usage:
@@ -50,6 +53,7 @@ Features:
 EOF
 }
 
+# 'process_arguments' wants POSIX semantics: share variables
 process_arguments() {
 
     stop_processing=
@@ -121,8 +125,11 @@ process_arguments() {
     else
         source_branch="$branch"
     fi
+
+    release_parameter_file=~/ledgersmb-$branch-release-parameters
 }
 
+# 'load_configuration' wants POSIX semantics: share variables
 load_configuration() {
     [[ -f ~/.lsmb-dockerhub-releases ]] && source ~/.lsmb-dockerhub-releases
     [[ -f ~/.lsmb-ghcr-releases ]] && source ~/.lsmb-ghcr-releases
@@ -148,12 +155,21 @@ Modified versions don't get tagged. Force tag? [y/N]"
     fi
 }
 
+function add_release_parameter {
+    cat <<-EOF >> $release_parameter_file
+$1="\$(cat <<'EOT'
+$2
+EOT
+)"
+EOF
+}
 
-fail() {
+function fail {
    echo -e "$1\n" >&2
    exit 1
 }
 
+# 'verify_dependency' wants POSIX semantics: share variables
 verify_dependency() {
    which_executable=$(which $1)
    eval $1="$which_executable"
@@ -162,6 +178,7 @@ verify_dependency() {
    fi
 }
 
+# 'verify_dependencies' wants POSIX semantics: share variables
 verify_dependencies() {
    verify_dependency "find"
    verify_dependency "gpg"
@@ -193,13 +210,13 @@ verify_dependencies() {
    verify_dependency "docker"
 }
 
-verify_release_key() {
+function verify_release_key {
    if [[ -z $($gpg --list-secret-keys "$release_key") ]] ; then
      fail "No key with ID '$release_key' (release key) available!"
    fi
 }
 
-failure_cleanup() {
+function failure_cleanup {
     rm -rf "$our_workspace"
     rm -rf "$docker_workspace"
     if [[ -n "$upload_staging" ]]
@@ -213,13 +230,14 @@ rmdir '$upload_staging'
     fi
 }
 
+# 'verify_dependencies' wants POSIX semantics: share traps
 setup_workspace() {
    our_workspace=$($mktemp -d)
    docker_workspace=$($mktemp -d)
    trap "failure_cleanup" TERM EXIT
 }
 
-populate_workspace() {
+function populate_workspace {
     trap 'fail "Failed to check out branch ''$branch'' from ''$URL''!"' ERR
 
     olddir=$PWD
@@ -242,58 +260,77 @@ populate_workspace() {
 
     if test -e "$our_workspace/$checkout_dir/LedgerSMB.pm" ;
     then
+        # sets parent variable
         LedgerSMBpm_path="LedgerSMB.pm"
     else
+        # sets parent variable
         LedgerSMBpm_path="lib/LedgerSMB.pm"
     fi
     if test -e "$our_workspace/$checkout_dir/UI/src/locales" ;
     then
+        # sets parent variable
         locale_paths="locale UI/src/locales"
     else
+        # sets parent variable
         locale_paths="locale"
     fi
     echo "LedgerSMB.pm found at $LedgerSMBpm_path"
 }
 
-populate_docker_workspace() {
-  ( cd $docker_workspace && \
-    $git clone --recursive --single-branch --branch "$branch" "$URL_docker" "$docker_workspace/docker") \
-  || fail "Failed to check out (docker) branch '$branch' from '$docker_URL'!"
+function populate_docker_workspace {
+    pushd "$docker_workspace"
+    trap "fail \"Failed to check out (docker) branch '$branch' from '$docker_URL'!\"" ERR
+    $git clone --recursive --single-branch --branch "$branch" "$URL_docker" "$docker_workspace/docker"
+    popd
 }
 
-update_database_schema() {
-    (cd "$our_workspace/$checkout_dir" && \
-     $sudo -Hiu postgres $psql -c "drop database if exists ledgersmb" && \
-     $sudo -Hiu postgres $createdb ledgersmb && \
-     $sudo -Hiu postgres $psql -c "alter role postgres password 'postgres'" && \
-     $sudo -Hiu postgres $psql -d ledgersmb < sql/Pg-database.sql && \
-     ( for script in $($grep -vE '^#|^$' sql/changes/LOADORDER | $sed -e 's/!//') ; do $sudo -Hiu postgres psql -d ledgersmb < sql/changes/$script ; done ) && \
-     ( for script in $($grep -vE '^#|^$' sql/modules/LOADORDER | $sed -e 's/!//') ; do $sudo -Hiu postgres $psql -d ledgersmb < sql/modules/$script ; done ) && \
-     ( cd doc/database && \
-       $postgresql_autodoc -h localhost -d ledgersmb -U postgres --password=postgres ) && \
-     $git add --all doc/database && $git commit -m "* Automated release schema update" ) \
-    || fail "Failed to update database schema documentation"
+function update_database_schema {
+    pushd "$our_workspace/$checkout_dir"
+    trap "fail \"Failed to update database schema documentation\"" ERR
+    $sudo -Hiu postgres $psql -c "drop database if exists ledgersmb"
+    $sudo -Hiu postgres $createdb ledgersmb
+    $sudo -Hiu postgres $psql -c "alter role postgres password 'postgres'"
+    $sudo -Hiu postgres $psql -d ledgersmb < sql/Pg-database.sql
+    for script in $($grep -vE '^#|^$' sql/changes/LOADORDER | $sed -e 's/!//')
+    do
+        $sudo -Hiu postgres psql -d ledgersmb < sql/changes/$script
+    done
+    for script in $($grep -vE '^#|^$' sql/modules/LOADORDER | $sed -e 's/!//')
+    do
+        $sudo -Hiu postgres $psql -d ledgersmb < sql/modules/$script
+    done
+
+    push doc/database
+    $postgresql_autodoc -h localhost -d ledgersmb -U postgres --password=postgres
+    popd
+
+    $git add --all doc/database && $git commit -m "* Automated release schema update"
+    popd
 }
 
-update_translations() {
-   (cd "$our_workspace/$checkout_dir" && \
-    $tx pull -f -a && utils/devel/rebuild_pot.sh && \
-    ($find . -name '*~' -exec rm '{}' + ) && \
-    ($find . -name '*.orig' -exec rm '{}' + ) && \
-    $git add --all $locale_paths && $git commit -m "* Automated release language update" ) \
-   || fail "Failed to update branch ($branch) translations"
+function update_translations {
+    push "$our_workspace/$checkout_dir"
+    trap "fail \"Failed to update branch ($branch) translations\"" ERR
+    $tx pull -f -a && utils/devel/rebuild_pot.sh
+    $find . -name '*~' -exec rm '{}' +
+    $find . -name '*.orig' -exec rm '{}' +
+    $git add --all $locale_paths
+    $git commit -m "* Automated release language update"
+    popd
 }
 
-update_dockerfile() {
-   (cd "$docker_workspace/docker" && \
+function update_dockerfile {
+    pushd "$docker_workspace/docker"
+    trap "fail \"Failed to update Dockerfile!\"" ERR
     $sed -i -e "s/^ENV LSMB_VERSION .*\$/ENV LSMB_VERSION $release_version/
                 s/^ARG LSMB_VERSION=.*\$/ARG LSMB_VERSION=\"$release_version\"/
-                s/^ARG LSMB_DL_DIR=.*\$/ARG LSMB_DL_DIR=\"$prj_sub_dir\"/ " Dockerfile && \
-    $git commit -a -m "* Automatic Dockerfile update by release process" && \
-    $git tag "$release_version") \
-   || fail "Failed to update Dockerfile!"
+                s/^ARG LSMB_DL_DIR=.*\$/ARG LSMB_DL_DIR=\"$prj_sub_dir\"/ " Dockerfile
+    $git commit -a -m "* Automatic Dockerfile update by release process"
+    $git tag "$release_version"
+    popd
 }
 
+# 'detect_current_version' wants POSIX semantics: share variables
 detect_current_version() {
    current_version=$(
      cd "$our_workspace/$checkout_dir"
@@ -306,10 +343,11 @@ detect_current_version() {
    fi
 }
 
-version_to_regex() {
+function version_to_regex {
    echo "$1" | $sed 's/\./\\./g'
 }
 
+# 'detect_versionpatch_files' wants POSIX semantics: share variables
 detect_versionpatch_files() {
    versionpatch_regex=$(version_to_regex "$current_version")
    versionpatch_files=$(grep -lRE "$versionpatch_regex" "$our_workspace/$checkout_dir" | grep -v Changelog | grep -v sql/changes/)
@@ -318,16 +356,20 @@ detect_versionpatch_files() {
    fi
 }
 
-patch_version() {
+function patch_version {
    version_regex=$(version_to_regex "$1")
    new_version=$2
-   $sed -i -e "s/$version_regex/$new_version/" $versionpatch_files \
-   || fail "Failed to patch files for version update!"
-   $sed -i -e "s/\"Project-Id-Version:.*/\"Project-Id-Version: LedgerSMB $new_version\\\\n\"/" "$our_workspace/$checkout_dir/locale/po"/*.po \
-   || fail "Failed to patch PO files for version update!"
+   if ! $sed -i -e "s/$version_regex/$new_version/" $versionpatch_files ;
+   then
+       fail "Failed to patch files for version update!"
+   fi
+   if ! $sed -i -e "s/\"Project-Id-Version:.*/\"Project-Id-Version: LedgerSMB $new_version\\\\n\"/" "$our_workspace/$checkout_dir/locale/po"/*.po ;
+   then
+       fail "Failed to patch PO files for version update!"
+   fi
 }
 
-show_release_parameters() {
+function show_release_parameters {
 clear
 echo "
 Please review details below!
@@ -353,129 +395,148 @@ $(cd "$our_workspace/$checkout_dir" && $git diff )
 
 }
 
-commit_versionupdate() {
-   (cd "$our_workspace/$checkout_dir" && \
-    $git commit -am "Update version$1" ) \
-   || [[ -n "$force_accept_version_update" ]] \
-   || fail "Failed to commit version update patch!"
+function commit_versionupdate {
+    pushd "$our_workspace/$checkout_dir"
+    trap "fail \"Failed to commit version update patch!\"" ERR
+    $git commit -am "Update version $1" || [[ -n "$force_accept_version_update" ]]
+    popd
 }
 
-commit_versiontag() {
-   (cd "$our_workspace/$checkout_dir" && \
-    $git tag -m "$release_version" "$release_version" ) \
-   || fail "Failed to tag version $release_version!"
+function commit_versiontag {
+    pushd "$our_workspace/$checkout_dir"
+    trap "fail \"Failed to tag version $release_version!"\" ERR
+    $git tag -m "$release_version" "$release_version"
+    popd
 }
 
-create_versiontarball() {
-   (cd "$our_workspace/$checkout_dir" && \
-    $git checkout "$release_version" && \
-    $make dist DIST_DIR=../ DIST_VER=$release_version ) \
-   || fail "Failed to create release archive!"
+function create_versiontarball {
+    pushd "$our_workspace/$checkout_dir"
+    trap "fail \"Failed to create release archive!\"" ERR
+    $git checkout "$release_version"
+    $make dist DIST_DIR=../ DIST_VER=$release_version
+    popd
 }
 
-sign_versiontarball() {
+function sign_versiontarball {
    echo -n "Signing ledgersmb-$release_version.tar.gz\n"
    $gpg -u "$release_key" \
         -a -b "$our_workspace/ledgersmb-$release_version.tar.gz" \
-   || fail "Failed to sign release archive!"
+       || fail "Failed to sign release archive!"
    echo "Succesfully signed release archive; directory content:
 
 $(ls -lh "$our_workspace")
 "
 }
 
-build_pod() {
-    (cd "$our_workspace/$checkout_dir" && \
-     $make pod) \
-    || fail "Failed to build Perl API docs!"
+function build_pod() {
+    pushd "$our_workspace/$checkout_dir"
+    trap "fail \"Failed to build Perl API docs!\"" ERR
+    $make pod
+    popd
 }
 
-build_docker_images() {
-    (cd "$docker_workspace/docker" && \
-     $sudo $docker build --build-arg "ARTIFACT_LOCATION=$staged_artifact" -t ledgersmb/ledgersmb:$branch . ) \
-    || fail "Failed to build docker images"
+function build_docker_images {
+    pushd "$docker_workspace/docker"
+    trap "fail \"Failed to build docker images\"" ERR
+    $sudo $docker build --build-arg "ARTIFACT_LOCATION=$staged_artifact" -t ledgersmb/ledgersmb:$branch .
+    popd
 }
 
-update_remote() {
-   (cd "$our_workspace/$checkout_dir" && \
-    $git push --follow-tags origin "$branch" ) \
-   || fail "Failed to update the origin repository!"
+function update_remote {
+    pushd "$our_workspace/$checkout_dir"
+    trap "fail \"Failed to update the origin repository!"\" ERR
+    $git push --follow-tags origin "$branch"
+    popd
 }
 
-update_docker_remote() {
-   (cd "$docker_workspace/docker" && \
-    $git push --tags origin "$branch" ) \
-   || fail "Failed to update remote docker repository!"
+function update_docker_remote {
+    pushd "$docker_workspace/docker"
+    trap "fail \"Failed to update remote docker repository!"\" ERR
+    $git push --tags origin "$branch"
+    popd
 }
 
-stage_files_dl() {
-    (cd "$our_workspace" && \
-     echo "mkdir '$upload_staging'
+function stage_files_dl {
+    pushd "$our_workspace"
+    trap "fail \"Failed to upload files to download.ledgersmb.org!\"" ERR
+    echo "mkdir '$upload_staging'
 cd '$upload_staging'
 put 'ledgersmb-$release_version.tar.gz.asc'
 put 'ledgersmb-$release_version.tar.gz'
-" | $sftp -b - "lsmb-uploader@download.ledgersmb.org") \
-     || fail "Failed to upload files to download.ledgersmb.org!"
+" | $sftp -b - "lsmb-uploader@download.ledgersmb.org"
+    popd
 }
 
-publish_docker_images() {
-    ((echo $docker_password | $docker login -u $docker_user --password-stdin ) &&
-     $docker image tag ledgersmb/ledgersmb:$branch ledgersmb/ledgersmb:$release_version && \
-     ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
-      || $docker image tag ledgersmb/ledgersmb:$branch ledgersmb/ledgersmb:latest ) && \
-     $docker image push ledgersmb/ledgersmb:$branch && \
-     $docker image push ledgersmb/ledgersmb:$release_version && \
-     ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
-      || $docker image push ledgersmb/ledgersmb:latest)
-    ) \
-    || fail "Failed to publish docker images"
+function publish_docker_images {
+    trap "fail \"Failed to publish docker images\"" ERR
+    echo $docker_password | $docker login -u $docker_user --password-stdin
+    $docker image tag ledgersmb/ledgersmb:$branch ledgersmb/ledgersmb:$release_version
+
+    $docker image push ledgersmb/ledgersmb:$branch
+    $docker image push ledgersmb/ledgersmb:$release_version
+
+    pushd "$docker_workspace/docker"
+    default_branch="$($git remote show origin | $awk '/HEAD branch/ {print $NF}' )"
+    popd
+    if [[ "$branch" == "$default_branch" ]]
+    then
+        $docker image tag ledgersmb/ledgersmb:$branch ledgersmb/ledgersmb:latest
+        $docker image push ledgersmb/ledgersmb:latest
+    fi
 }
 
-publish_ghcr_images() {
-    ((echo $ghcr_token | $docker login ghcr.io -u $ghcr_user --password-stdin ) &&
-     $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:$branch && \
-     $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:$release_version && \
-     ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
-      || $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:latest ) && \
-     $docker image push ghcr.io/ledgersmb/ledgersmb:$branch && \
-     $docker image push ghcr.io/ledgersmb/ledgersmb:$release_version && \
-     ([[ "$branch" != "$(cd "$docker_workspace/docker"; $git remote show origin | $awk '/HEAD branch/ {print $NF}' )" ]] \
-      || $docker image push ghcr.io/ledgersmb/ledgersmb:latest)
-    ) \
-    || fail "Failed to publish GitHub Container Repository images"
+function publish_ghcr_images {
+    trap "fail \"Failed to publish GitHub Container Repository images\"" ERR
+
+    echo $ghcr_token | $docker login ghcr.io -u $ghcr_user --password-stdin
+    $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:$branch
+    $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:$release_version
+
+    $docker image push ghcr.io/ledgersmb/ledgersmb:$branch
+    $docker image push ghcr.io/ledgersmb/ledgersmb:$release_version
+
+    pushd "$docker_workspace/docker"
+    default_branch="$($git remote show origin | $awk '/HEAD branch/ {print $NF}' )"
+    popd
+    if [[ "$branch" == "$default_branch" ]]
+    then
+          $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:latest
+          $docker image push ghcr.io/ledgersmb/ledgersmb:latest
+    fi
 }
 
-publish_files_dl() {
-    (cd "$our_workspace" && \
-     echo "cd '$dl_base_dir/$prj_sub_dir'
+function publish_files_dl {
+    trap "fail \"Failed to upload files to download.ledgersmb.org!\"" ERR
+
+    echo "cd '$dl_base_dir/$prj_sub_dir'
 mkdir '$release_version'
 cd '$release_version'
 rename '$upload_staging/ledgersmb-$release_version.tar.gz.asc' './ledgersmb-$release_version.tar.gz.asc'
 rename '$upload_staging/ledgersmb-$release_version.tar.gz' './ledgersmb-$release_version.tar.gz'
 rmdir '$upload_staging'
-" | $sftp -b - "lsmb-uploader@download.ledgersmb.org") \
-     || fail "Failed to upload files to download.ledgersmb.org!"
+" | $sftp -b - "lsmb-uploader@download.ledgersmb.org"
 }
 
-publish_files_gh() {
+function publish_files_gh {
    gh_auth="-u $github_user:$github_token"
-   (cd "$our_workspace" && \
-    $curl -X POST $gh_auth "$GH_api/ledgersmb/LedgerSMB/releases" \
-          -d "{\"tag_name\": \"$release_version\", \"name\": \"$release_version\", \"draft\": true, \"body\": \"todo\", \"name\": \"\"}" \
-       > release_create_response) \
-   || fail "Failed to create GitHub release!"
+   $curl -X POST $gh_auth "$GH_api/ledgersmb/LedgerSMB/releases" \
+         -d "{\"tag_name\": \"$release_version\", \"name\": \"$release_version\", \"draft\": true, \"body\": \"todo\", \"name\": \"\"}" \
+         > $our_workspace/release_create_response \
+       || fail "Failed to create GitHub release!"
    upload_url=$($jq -M -r '.upload_url' < $our_workspace/release_create_response | $sed -e 's/{.*//')
+   github_release_url=$($jq -M -r '.url' < $our_workspace/release_create_response)
    $curl -X POST -H 'Content-Type: text/plain' $gh_auth \
          "$upload_url?name=ledgersmb-$release_version.tar.gz.asc" \
          -T $our_workspace/ledgersmb-$release_version.tar.gz.asc \
-   || fail "Failed to upload signature file to GitHub!"
+       || fail "Failed to upload signature file to GitHub!"
    $curl -X POST -H 'Content-Type: application/x-tar' $gh_auth \
          "$upload_url?name=ledgersmb-$release_version.tar.gz" \
          -T $our_workspace/ledgersmb-$release_version.tar.gz \
-   || fail "Failed to upload tarball to GitHub!"
+       || fail "Failed to upload tarball to GitHub!"
 }
 
 
+# 'extract_changelog_internal' wants POSIX semantics: share variables
 extract_changelog_internal() {
    extract_version=${1:-$release_version}
    escaped_version=$(echo "$extract_version" | $sed -e 's/\./\./g')
@@ -501,6 +562,7 @@ BEGIN {
 }" Changelog)
 }
 
+# 'extract_changelog' wants POSIX semantics: share variables
 extract_changelog() {
    extract_changelog_internal
 
@@ -510,16 +572,17 @@ extract_changelog() {
   fi
 }
 
+# 'extract_sha256sum' wants POSIX semantics: share variables
 extract_sha256sum() {
    extracted_sha256sums=$(cd "$our_workspace" && \
      $sha256sum ledgersmb-$release_version.tar.gz* )
 }
 
-upload_pod() {
-    (cd "$our_workspace/$checkout_dir" && \
-         $scp -q -r UI/pod/ \
-              lsmb-uploader@docs.ledgersmb.org:$pod_base_dir/$release_version/ ) \
-        || fail "Failed to upload Perl API docs!"
+function upload_pod {
+    pushd "$our_workspace/$checkout_dir"
+    trap "fail \"Failed to upload Perl API docs!\"" ERR
+    $scp -q -r UI/pod/ lsmb-uploader@docs.ledgersmb.org:$pod_base_dir/$release_version/
+    popd
 }
 
 
@@ -572,31 +635,44 @@ create_versiontarball
 sign_versiontarball
 extract_changelog
 extract_sha256sum
+
+rm -f $release_parameter_file
+
+add_release_parameter 'our_workspace' "$our_workspace"
+add_release_parameter 'release_branch' "$branch"
+add_release_parameter 'release_version' "$release_version"
+add_release_parameter 'release_date' "$(date --iso --utc)"
+add_release_parameter 'release_sha256sums' "$extracted_sha256sums"
+
+
 build_pod
 
 staging_uuid=$($uuid)
 upload_staging="$dl_base_dir/../staging/$staging_uuid"
-stage_files_dl
+add_release_parameter 'staging_uuid'  "$staging_uuid"
 
+stage_files_dl
 staged_artifact="https://download.ledgersmb.org/staging/$staging_uuid/ledgersmb-$release_version.tar.gz"
+add_release_parameter 'staged_artifact'  "$staged_artifact"
 if [[ "$with_docker" == "yes" ]]; then
     build_docker_images
 fi
 
 
-$cat <<EOT > ~/ledgersmb-$branch-release-parameters
-release_branch=$branch
-release_version=$release_version
-release_date=$($date --iso --utc)
-release_sha256sums="\$($cat <<'EOF'
-$extracted_sha256sums
-EOF
-)"
 
-release_changelog="\$($cat <<'EOF'
-$extracted_changelog
-EOF
-)"
+$cat <<EOT >> $release_parameter_file
+#release_branch=$branch
+#release_version=$release_version
+#release_date=$($date --iso --utc)
+#release_sha256sums="\$($cat <<'EOF'
+#$extracted_sha256sums
+#EOF
+#)"
+
+#release_changelog="\$($cat <<'EOF'
+#$extracted_changelog
+#EOF
+#)"
 EOT
 
 
@@ -640,6 +716,7 @@ if [[ "$tag_release" == "Y" ]]; then
     # we can't upload to GitHub if there's no tag...
     echo "Updating GitHub tag with attachments"
     publish_files_gh
+    add_release_parameter 'github_release_url' "$github_release_url"
 fi
 if [[ "$with_docker" == "yes" ]]
 then
