@@ -28,7 +28,7 @@ run-command pip3 install matrix-client
 
 # Net::Async::Matrix for the matrix announcement (is available in Debian as-of Bullseye)
 # MediaWiki::Bot for the wikipedia updates
-run-command cpanm --notest Workflow Net::Async::Matrix MediaWiki::Bot
+run-command cpanm --notest Workflow Net::Async::Matrix MediaWiki::Bot IO::Async::SSL
 
 copy-in ./files/postgresql.list:/etc/apt/sources.list.d/
 copy-in ./files/postgresql-key.asc:/etc/apt/trusted.gpg.d/
