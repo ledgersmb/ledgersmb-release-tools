@@ -4,6 +4,7 @@ root-password password:root
 hostname releaser.local
 run-command fstrim -a -v
 append-line /etc/sysctl.conf:net.ipv6.conf.all.disable_ipv6=1
+run-command bash -c "debconf-set-selections <<< 'grub-pc grub-pc/install_devices multiselect /dev/sda'"
 run-command DEBIAN_FRONTEND=noninteractive dpkg-reconfigure grub-pc
 
 copy-in ./files/00recommended:/etc/apt/apt.conf.d/
@@ -11,7 +12,7 @@ copy-in ./files/00recommended:/etc/apt/apt.conf.d/
 run-command apt-get -y --allow-releaseinfo-change update
 run-command DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -q -y -o Dpkg::Options::=--force-confnew
 
-install curl,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl,libmime-tools-perl,libemail-sender-perl,libemail-stuffer-perl,libauthen-sasl-perl,libc6-dev,g++,libc++-dev,uuid,liburl-encode-perl,libtext-diff-perl,libpod-projectdocs-perl,libfile-grep-perl
+install curl,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl,libmime-tools-perl,libemail-sender-perl,libemail-stuffer-perl,libauthen-sasl-perl,libc6-dev,g++,libc++-dev,uuid,liburl-encode-perl,libtext-diff-perl,libpod-projectdocs-perl,libfile-grep-perl,systemd-resolved,nodejs,npm
 copy-in ./files/motd:/etc/
 
 copy-in ./files/20-wired.network:/etc/systemd/network/
@@ -22,8 +23,8 @@ run-command systemctl enable systemd-resolved
 firstboot-command rm /etc/resolv.conf ; ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf ; reboot
 
 run-command curl -o- https://raw.githubusercontent.com/transifex/cli/master/install.sh | bash ; mv tx /usr/local/bin/
-run-command pip3 install --upgrade urllib3
-run-command pip3 install matrix-client
+#run-command pip3 install --upgrade urllib3
+#run-command pip3 install matrix-client
 
 
 # Net::Async::Matrix for the matrix announcement (is available in Debian as-of Bullseye)
@@ -33,16 +34,17 @@ run-command cpanm --notest Workflow Net::Async::Matrix MediaWiki::Bot IO::Async:
 copy-in ./files/postgresql.list:/etc/apt/sources.list.d/
 copy-in ./files/postgresql-key.asc:/etc/apt/trusted.gpg.d/
 run-command apt-key add /etc/apt/trusted.gpg.d/postgresql-key.asc
-copy-in ./files/nodesource.list:/etc/apt/sources.list.d/
-copy-in ./files/nodesource.asc:/etc/apt/trusted.gpg.d/
-run-command apt-key add /etc/apt/trusted.gpg.d/nodesource.asc
+#copy-in ./files/nodesource.list:/etc/apt/sources.list.d/
+#copy-in ./files/nodesource.asc:/etc/apt/trusted.gpg.d/
+#run-command apt-key add /etc/apt/trusted.gpg.d/nodesource.asc
 copy-in ./files/docker.list:/etc/apt/sources.list.d/
 copy-in ./files/docker.asc:/etc/apt/trusted.gpg.d/
 run-command apt-key add /etc/apt/trusted.gpg.d/docker.asc
 
 
 update
-install postgresql-13,nodejs,docker-ce
+#install postgresql-13,nodejs,docker-ce
+install postgresql-13,docker-ce
 
 # Java JRE is required for building Dojo on 1.4 and 1.5
 install default-jre-headless
@@ -83,7 +85,10 @@ run-command \
              /home/releaser/.lsmb-site-releases ; \
    chmod +x /home/releaser/bin/mailer
 
-run-command \
-   git clone https://github.com/cbbrowne/autodoc.git \
-   cd autodoc \
-   make install
+run-command dpkg-reconfigure openssh-server
+
+
+#run-command \
+#   git clone https://github.com/cbbrowne/autodoc.git \
+#   cd autodoc \
+#   make install

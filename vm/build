@@ -34,5 +34,5 @@ virt-builder $verbose \
      --arch amd64 \
      --size 20G \
      --commands-from-file virt-builder-commands \
-     debian-10
+     debian-12
 
