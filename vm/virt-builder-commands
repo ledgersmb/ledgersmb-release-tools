@@ -44,7 +44,7 @@ run-command apt-key add /etc/apt/trusted.gpg.d/docker.asc
 
 update
 #install postgresql-13,nodejs,docker-ce
-install postgresql-13,docker-ce
+install postgresql-13,docker-ce,docker-buildx-plugin
 
 # Java JRE is required for building Dojo on 1.4 and 1.5
 install default-jre-headless
