@@ -438,7 +438,7 @@ function build_pod() {
 function build_docker_images {
     pushd "$docker_workspace/docker"
     trap "fail \"Failed to build docker images\"" ERR
-    $sudo $docker build --build-arg "ARTIFACT_LOCATION=$staged_artifact" -t ledgersmb/ledgersmb:$branch .
+    $sudo $docker buildx build --build-arg "ARTIFACT_LOCATION=$staged_artifact" -t ledgersmb/ledgersmb:$branch .
     popd
 }
 
