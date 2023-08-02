@@ -10,6 +10,7 @@ URL_docker="git@github.com:ledgersmb/ledgersmb-docker.git"
 GH_api="https://api.github.com/repos"
 branch=""
 source_branch=""
+docker_branch=""
 release_version=""
 new_dev_version=""
 checkout_dir="LedgerSMB"
@@ -174,6 +175,10 @@ process_arguments() {
                 debug_script=yes
                 shift
                 ;;
+            --docker-branch)
+                docker_branch="$2"
+                shift 2
+                ;;
             --force-accept-version-update)
                 force_accept_version_update=yes
                 shift
@@ -230,6 +235,10 @@ process_arguments() {
         branch=${branch%:*}
     else
         source_branch="$branch"
+    fi
+    if [[ -z "$docker_branch" ]]
+    then
+        docker_branch="$branch"
     fi
 
     release_parameter_file=~/ledgersmb-$branch-release-parameters
@@ -386,7 +395,7 @@ function populate_workspace {
 function populate_docker_workspace {
     pushd "$docker_workspace"
     trap "fail \"Failed to check out (docker) branch '$branch' from '$docker_URL'!\"" ERR
-    $git clone --recursive --single-branch --branch "$branch" "$URL_docker" "$docker_workspace/docker"
+    $git clone --recursive --single-branch --branch "$docker_branch" "$URL_docker" "$docker_workspace/docker"
     popd
 }
 
@@ -558,7 +567,7 @@ function update_remote {
 function update_docker_remote {
     pushd "$docker_workspace/docker"
     trap "fail \"Failed to update remote docker repository!"\" ERR
-    $git push --tags origin "$branch"
+    $git push --tags origin "$docker_branch"
     popd
 }
 
@@ -687,7 +696,7 @@ extract_sha256sum() {
 function upload_pod {
     pushd "$our_workspace/$checkout_dir"
     trap "fail \"Failed to upload Perl API docs!\"" ERR
-    $scp -q -r UI/pod/ lsmb-uploader@docs.ledgersmb.org:$pod_base_dir/$release_version/
+    $scp -q -r UI/pod lsmb-uploader@docs.ledgersmb.org:$pod_base_dir/$release_version
     popd
 }
 
@@ -749,7 +758,7 @@ add_release_parameter 'release_branch' "$branch"
 add_release_parameter 'release_version' "$release_version"
 add_release_parameter 'release_date' "$(date --iso --utc)"
 add_release_parameter 'release_sha256sums' "$extracted_sha256sums"
-
+add_release_parameter 'release_changelog' "$extracted_changelog"
 
 build_pod
 
@@ -763,23 +772,6 @@ add_release_parameter 'staged_artifact'  "$staged_artifact"
 if [[ "$with_docker" == "yes" ]]; then
     build_docker_images
 fi
-
-
-
-$cat <<EOT >> $release_parameter_file
-#release_branch=$branch
-#release_version=$release_version
-#release_date=$($date --iso --utc)
-#release_sha256sums="\$($cat <<'EOF'
-#$extracted_sha256sums
-#EOF
-#)"
-
-#release_changelog="\$($cat <<'EOF'
-#$extracted_changelog
-#EOF
-#)"
-EOT
 
 
 # We have the signed binaries now and are about to publish;
@@ -806,11 +798,12 @@ fi
 if [[ "$tag_release" == "Y" ]]; then
     echo "Pushing changes to repository"
     update_remote
-fi
-if [[ "$with_docker" == "yes" ]]
-then
-    echo "Pushing docker updates"
-    update_docker_remote
+
+    if [[ "$with_docker" == "yes" ]]
+    then
+        echo "Pushing docker updates"
+        update_docker_remote
+    fi
 fi
 publish_files_dl
 
