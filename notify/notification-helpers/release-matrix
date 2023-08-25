@@ -12,6 +12,7 @@ use Net::Async::Matrix;
 my $loop   = IO::Async::Loop->new;
 my $matrix = Net::Async::Matrix->new(
     server => $ENV{MATRIX_SERVER},
+    SSL    => 1,
     );
 
 $loop->add( $matrix );
