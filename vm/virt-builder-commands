@@ -53,6 +53,7 @@ install default-jre-headless
 run-command npm install -g uglify-js@">=2.0 <3.0"
 run-command npm install -g i18next-conv
 run-command npm install -g vue-i18n-extract-translations
+run-command npm install -g yarn
 
 # 1.8+ use webpack to transpile JS, installed through npm at build time
 
