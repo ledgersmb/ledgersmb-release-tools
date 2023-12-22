@@ -553,7 +553,24 @@ function build_pod {
 function build_docker_images {
     pushd "$docker_workspace/docker"
     trap "fail \"Failed to build docker images\"" ERR
-    $sudo $docker buildx build --build-arg "ARTIFACT_LOCATION=$staged_artifact" -t ledgersmb/ledgersmb:$branch .
+
+    default_branch="$($git remote show origin | $awk '/HEAD branch/ {print $NF}' )"
+    if [[ "$branch" == "$default_branch" ]]
+    then
+       latest_tags="-t ledgersmb/ledgersmb:latest -t ghcr.io/ledgersmb/ledgersmb:latest"
+    fi
+
+    # $1 == '--push' or empty
+    $sudo $docker buildx build \
+             --progress plain \
+             --platform linux/amd64,linux/arm64,linux/arm/v7 \
+             --build-arg "ARTIFACT_LOCATION=$staged_artifact" \
+             -t ledgersmb/ledgersmb:$branch \
+             -t ledgersmb/ledgersmb:$release_version \
+             -t ghcr.io/ledgersmb/ledgersmb:$branch \
+             -t ghcr.io/ledgersmb/ledgersmb:$release_version \
+             $latest_tags \
+             $1 .
     popd
 }
 
@@ -585,39 +602,9 @@ put 'ledgersmb-$release_version.tar.gz'
 function publish_docker_images {
     trap "fail \"Failed to publish docker images\"" ERR
     echo $docker_password | $docker login -u $docker_user --password-stdin
-    $docker image tag ledgersmb/ledgersmb:$branch ledgersmb/ledgersmb:$release_version
-
-    $docker image push ledgersmb/ledgersmb:$branch
-    $docker image push ledgersmb/ledgersmb:$release_version
-
-    pushd "$docker_workspace/docker"
-    default_branch="$($git remote show origin | $awk '/HEAD branch/ {print $NF}' )"
-    popd
-    if [[ "$branch" == "$default_branch" ]]
-    then
-        $docker image tag ledgersmb/ledgersmb:$branch ledgersmb/ledgersmb:latest
-        $docker image push ledgersmb/ledgersmb:latest
-    fi
-}
-
-function publish_ghcr_images {
-    trap "fail \"Failed to publish GitHub Container Repository images\"" ERR
-
     echo $ghcr_token | $docker login ghcr.io -u $ghcr_user --password-stdin
-    $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:$branch
-    $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:$release_version
 
-    $docker image push ghcr.io/ledgersmb/ledgersmb:$branch
-    $docker image push ghcr.io/ledgersmb/ledgersmb:$release_version
-
-    pushd "$docker_workspace/docker"
-    default_branch="$($git remote show origin | $awk '/HEAD branch/ {print $NF}' )"
-    popd
-    if [[ "$branch" == "$default_branch" ]]
-    then
-          $docker image tag ledgersmb/ledgersmb:$branch ghcr.io/ledgersmb/ledgersmb:latest
-          $docker image push ghcr.io/ledgersmb/ledgersmb:latest
-    fi
+   build_docker_images --push
 }
 
 function publish_files_dl {
@@ -819,11 +806,8 @@ if [[ "$tag_release" == "Y" ]]; then
 fi
 if [[ "$with_docker" == "yes" ]]
 then
-    echo "Uploading Docker images"
+    echo "Uploading Docker images to Docker Hub and GitHub Container Repository"
     publish_docker_images
-
-    echo "Uploading GitHub Container Repository images"
-    publish_ghcr_images
 fi
 
 

@@ -4,7 +4,8 @@
 virt-install \
     --import \
     --name releaser \
-    --ram 2048 \
+    --ram 4096 \
+    --vcpus 4 \
     --graphics vnc \
     --disk path=./tmp/releaser.qcow2,bus=virtio \
     --network default,model=virtio \
