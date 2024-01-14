@@ -561,10 +561,12 @@ function build_docker_images {
     fi
 
     # $1 == '--push' or empty
-    $sudo $docker buildx build \
+    $sudo $docker run --rm --privileged tonistiigi/binfmt --install all
+    $docker buildx create --use
+    $docker buildx build \
              --progress plain \
              --platform linux/amd64,linux/arm64,linux/arm/v7 \
-             --build-arg "ARTIFACT_LOCATION=$staged_artifact" \
+             --build-arg "ARTIFACT_LOCATION=https://download.ledgersmb.org/f/Releases/$release_version/ledgersmb-$release_version.tar.gz" \
              -t ledgersmb/ledgersmb:$branch \
              -t ledgersmb/ledgersmb:$release_version \
              -t ghcr.io/ledgersmb/ledgersmb:$branch \
@@ -757,7 +759,7 @@ stage_files_dl
 staged_artifact="https://download.ledgersmb.org/staging/$staging_uuid/ledgersmb-$release_version.tar.gz"
 add_release_parameter 'staged_artifact'  "$staged_artifact"
 if [[ "$with_docker" == "yes" ]]; then
-    build_docker_images
+: #    build_docker_images
 fi
 
 
