@@ -78,13 +78,13 @@ my %stable_updates = (
    'en.wikipedia.org' => {
       'LedgerSMB' => [
          '| latest release version = [%version%]',
-         '| latest release date = {{start date and age|[%year_full%]|[%monthnum_full%]|[%day_full%]}}',
+         '| latest release date = {{Start date and age|[%year_full%]|[%monthnum_full%]|[%day_full%]}}',
       ],
       'Comparison of accounting software' => [
          "[[LedgerSMB]]\n| Perl\n| 2006-09-06\n| [%version%]\n| [%isodate%]",
       ],
       'List of ERP software packages' => [
-         '| [[LedgerSMB]] || [[Perl]], PostgreSQL  || [[GPL]]|| Double entry accounting and ERP system (2006 fork of [[SQL-Ledger]]) || Worldwide ||[%year_full%] [%monthname_full%] ([%version%])',
+         '| [[LedgerSMB]] || [[Perl]], PostgreSQL  || [[GPL]]|| Double entry accounting and ERP system (2006 fork of [[SQL-Ledger]]) || Worldwide ||[%year_full%]-[%monthname_full%] ([%version%])',
       ],
    },
    'es.wikipedia.org' => {
