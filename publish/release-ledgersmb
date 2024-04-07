@@ -561,7 +561,7 @@ function build_docker_images {
     fi
 
     # $1 == '--push' or empty
-    $docker buildx build \
+    $sudo $docker buildx build \
              --progress plain \
              --platform linux/amd64,linux/arm64,linux/arm/v7 \
              --build-arg "ARTIFACT_LOCATION=https://download.ledgersmb.org/f/Releases/$release_version/ledgersmb-$release_version.tar.gz" \

@@ -19,7 +19,7 @@ set -xeo pipefail
 sudo bash -c "echo 1 >/proc/sys/net/ipv6/conf/all/disable_ipv6"
 sudo service docker restart
 sudo docker run --rm --privileged tonistiigi/binfmt --install all
-sudo docker buildx create --use
+sudo docker buildx create --use --name builder
 ssh-keyscan github.com > ~/.ssh/known_hosts
 ssh-keyscan download.ledgersmb.org >> ~/.ssh/known_hosts
 ssh-keyscan docs.ledgersmb.org >> ~/.ssh/known_hosts
