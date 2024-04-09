@@ -32,14 +32,11 @@ run-command curl -o- https://raw.githubusercontent.com/transifex/cli/master/inst
 run-command cpanm --notest Workflow Net::Async::Matrix MediaWiki::Bot IO::Async::SSL
 
 copy-in ./files/postgresql.list:/etc/apt/sources.list.d/
-copy-in ./files/postgresql-key.asc:/etc/apt/trusted.gpg.d/
-run-command apt-key add /etc/apt/trusted.gpg.d/postgresql-key.asc
+copy-in ./files/postgresql-key.asc:/etc/apt/keyrings/
 #copy-in ./files/nodesource.list:/etc/apt/sources.list.d/
-#copy-in ./files/nodesource.asc:/etc/apt/trusted.gpg.d/
-#run-command apt-key add /etc/apt/trusted.gpg.d/nodesource.asc
+#copy-in ./files/nodesource.asc:/etc/apt/keyrings/
 copy-in ./files/docker.list:/etc/apt/sources.list.d/
-copy-in ./files/docker.asc:/etc/apt/trusted.gpg.d/
-run-command apt-key add /etc/apt/trusted.gpg.d/docker.asc
+copy-in ./files/docker.asc:/etc/apt/keyrings/
 
 
 update

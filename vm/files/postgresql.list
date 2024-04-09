@@ -1,1 +1,1 @@
-deb http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main
+deb [signed-by=/etc/apt/keyrings/postgresql-key.asc] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main
