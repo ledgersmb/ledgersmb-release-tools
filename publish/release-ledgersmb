@@ -601,8 +601,8 @@ put 'ledgersmb-$release_version.tar.gz'
 
 function publish_docker_images {
     trap "fail \"Failed to publish docker images\"" ERR
-    echo $docker_password | $docker login -u $docker_user --password-stdin
-    echo $ghcr_token | $docker login ghcr.io -u $ghcr_user --password-stdin
+    echo $docker_password | $sudo $docker login -u $docker_user --password-stdin
+    echo $ghcr_token | $sudo $docker login ghcr.io -u $ghcr_user --password-stdin
 
    build_docker_images --push
 }
