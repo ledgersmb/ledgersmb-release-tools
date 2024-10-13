@@ -12,7 +12,7 @@ copy-in ./files/00recommended:/etc/apt/apt.conf.d/
 run-command apt-get -y --allow-releaseinfo-change update
 run-command DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -q -y -o Dpkg::Options::=--force-confnew
 
-install curl,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,qemu-user-static,binfmt-support,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl,libmime-tools-perl,libemail-sender-perl,libemail-stuffer-perl,libauthen-sasl-perl,libc6-dev,g++,libc++-dev,uuid,liburl-encode-perl,libtext-diff-perl,libpod-projectdocs-perl,libfile-grep-perl,systemd-resolved,nodejs,npm
+install curl,openssh-server,openssh-client,gnupg2,git,make,gcc,cpanminus,graphviz,libdbi-perl,libdbd-pg-perl,postgresql-autodoc,python3-pip,python3-setuptools,python3-wheel,python3-urllib3,tar,gzip,gettext,lsb-release,jq,coreutils,apt-transport-https,ksh,sudo,avahi-daemon,dirmngr,libvirt-daemon,libvirt-clients,libguestfs-tools,qemu-kvm,qemu-utils,qemu-user-static,binfmt-support,libmediawiki-api-perl,libdata-uuid-perl,libxml-simple-perl,libclass-factory-perl,libclass-accessor-perl,liblog-log4perl-perl,libfile-slurp-perl,libexception-class-perl,libdatetime-format-strptime-perl,libmoose-perl,libtemplate-perl,libreadonly-perl,libmime-tools-perl,libemail-sender-perl,libemail-stuffer-perl,libauthen-sasl-perl,libc6-dev,g++,libc++-dev,uuid,liburl-encode-perl,libtext-diff-perl,libpod-projectdocs-perl,libfile-grep-perl,systemd-resolved,npm
 copy-in ./files/motd:/etc/
 
 copy-in ./files/20-wired.network:/etc/systemd/network/
@@ -33,15 +33,14 @@ run-command cpanm --notest Workflow Net::Async::Matrix MediaWiki::Bot IO::Async:
 
 copy-in ./files/postgresql.list:/etc/apt/sources.list.d/
 copy-in ./files/postgresql-key.asc:/etc/apt/keyrings/
-#copy-in ./files/nodesource.list:/etc/apt/sources.list.d/
-#copy-in ./files/nodesource.asc:/etc/apt/keyrings/
+copy-in ./files/nodesource.list:/etc/apt/sources.list.d/
+copy-in ./files/nodesource.asc:/etc/apt/keyrings/
 copy-in ./files/docker.list:/etc/apt/sources.list.d/
 copy-in ./files/docker.asc:/etc/apt/keyrings/
 
 
 update
-#install postgresql-13,nodejs,docker-ce
-install postgresql-13,docker-ce,docker-buildx-plugin
+install postgresql-13,nodejs,docker-ce,docker-buildx-plugin
 
 # Java JRE is required for building Dojo on 1.4 and 1.5
 install default-jre-headless
