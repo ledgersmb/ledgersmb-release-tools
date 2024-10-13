@@ -23,6 +23,8 @@ tag_release="Y"
 with_docker=""
 
 
+remove_previous_state=""
+release_data_dir=""
 release_parameter_file=""
 github_release_url=""
 locale_paths=""
@@ -183,6 +185,10 @@ process_arguments() {
                 force_accept_version_update=yes
                 shift
                 ;;
+            --reset)
+                remove_previous_state=yes
+                shift
+                ;;
             --with-*)
                 option=${1#--with-}
                 shift
@@ -241,6 +247,7 @@ process_arguments() {
         docker_branch="$branch"
     fi
 
+    release_data_dir=~/ledgersmb-releases/$release_version
     release_parameter_file=~/ledgersmb-$branch-release-parameters
 }
 
@@ -332,24 +339,18 @@ function verify_release_key {
 }
 
 function failure_cleanup {
-    rm -rf "$our_workspace"
-    rm -rf "$docker_workspace"
-    if [[ -n "$upload_staging" ]]
-    then
-        echo "cd '$upload_staging'
--rm 'ledgersmb-$release_version.tar.gz.asc'
--rm 'ledgersmb-$release_version.tar.gz'
-cd ..
-rmdir '$upload_staging'
-" | $sftp -b - "lsmb-uploader@download.ledgersmb.org"
-    fi
+    # nothing to clean up, currently
 }
 
-# 'verify_dependencies' wants POSIX semantics: share traps
+# 'setup_workspace' wants POSIX semantics: share traps
 setup_workspace() {
-   our_workspace=$($mktemp -d)
-   docker_workspace=$($mktemp -d)
-   trap "failure_cleanup" TERM EXIT
+    mkdir -p "$release_data_dir/ledgersmb"
+    our_workspace="$release_data_dir/ledgersmb"
+    append_run_state our_workspace "$our_workspace"
+
+    mkdir -p "$release_data_dir/docker"
+    docker_workspace="$release_data_dir/docker"
+    append_run_state docker_workspace "$docker_workspace"
 }
 
 function populate_workspace {
@@ -381,6 +382,8 @@ function populate_workspace {
         # sets parent variable
         LedgerSMBpm_path="lib/LedgerSMB.pm"
     fi
+    append_run_state LedgerSMBpm_path "$LedgerSMBpm_path"
+
     if test -e "$our_workspace/$checkout_dir/UI/src/locales" ;
     then
         # sets parent variable
@@ -389,6 +392,7 @@ function populate_workspace {
         # sets parent variable
         locale_paths="locale"
     fi
+    append_run_state locale_paths "$locale_paths"
     echo "LedgerSMB.pm found at $LedgerSMBpm_path"
 }
 
@@ -456,6 +460,7 @@ detect_current_version() {
    if [[ -z "$current_version" ]] ; then
      fail "Failed to detect current version!"
    fi
+   append_run_state current_version "$current_version"
 }
 
 function version_to_regex {
@@ -469,6 +474,7 @@ detect_versionpatch_files() {
    if [[ -z "$versionpatch_regex" || -z "$versionpatch_files" ]]; then
      fail "Failed to detect which files to patch for version update!"
    fi
+   append_run_state versionpatch_files "$versionpatch_files"
 }
 
 function patch_version {
@@ -627,6 +633,8 @@ function publish_files_gh {
        || fail "Failed to create GitHub release!"
    upload_url=$($jq -M -r '.upload_url' < $our_workspace/release_create_response | $sed -e 's/{.*//')
    github_release_url=$($jq -M -r '.url' < $our_workspace/release_create_response)
+   add_release_parameter 'github_release_url' "$github_release_url"
+   append_run_state 'github_release_url' "$github_release_url"
    $curl -X POST -H 'Content-Type: text/plain' $gh_auth \
          "$upload_url?name=ledgersmb-$release_version.tar.gz.asc" \
          -T $our_workspace/ledgersmb-$release_version.tar.gz.asc \
@@ -671,13 +679,15 @@ extract_changelog() {
    if [[ -z $extracted_changelog && \
          -n $(echo "$release_version" | $grep -- "-rc") ]] ; then
      extract_changelog_internal $(echo "$release_version" | $sed -e 's/-rc.*//')
-  fi
+   fi
+   append_run_state 'extracted_changelog' "$extracted_changelog"
 }
 
 # 'extract_sha256sum' wants POSIX semantics: share variables
 extract_sha256sum() {
    extracted_sha256sums=$(cd "$our_workspace" && \
-     $sha256sum ledgersmb-$release_version.tar.gz* )
+                              $sha256sum ledgersmb-$release_version.tar.gz* )
+   append_run_state 'extracted_sha256sums' "$extracted_sha256sums"
 }
 
 function upload_pod {
@@ -687,20 +697,63 @@ function upload_pod {
     popd
 }
 
+function create_state_dir {
+    mkdir -p "$release_data_dir/steps"
+}
+
+# share variables, use posix semantics:
+load_previous_state() {
+    [ -e "$release_data_dir/state" ] && source "$release_data_dir/state"
+}
+
+function remove_previous_state {
+    rm -rf "$release_data_dir"
+}
+
+function append_run_state {
+    var=$1
+    shift
+    echo "$var=\"$(echo "$@" | sed -e 's/"/\\"/')\"" >> "$release_data_dir/state"
+}
+
+function run {
+    cmdsha=$(echo "$@" | sha256sum | cut -d " " -f1)
+    if [ -e "$release_data_dir/steps/$cmdsha" ];
+    then
+        echo "Skipping previously executed command: $@"
+    else
+        "$@"
+        rv=$?
+        if [ $? ]
+        then
+            echo "$@" > "$release_data_dir/steps/$cmdsha"
+        fi
+
+        return $rv
+    fi
+}
 
 process_arguments "$@"
 load_configuration
 verify_dependencies
+verify_release_key
 
 if [[ -n "$debug_script" ]]
 then
     set -x
 fi
 
-verify_release_key
-setup_workspace
-populate_workspace
-populate_docker_workspace
+if [[ -n "$remove_previous_state" ]]
+then
+    remove_previous_state
+fi
+create_state_dir
+load_previous_state
+run setup_workspace
+trap "failure_cleanup" TERM EXIT
+
+run populate_workspace
+run populate_docker_workspace
 
 if [[ -z $(echo "$release_version" | grep -- "-") ]]; then
     prj_sub_dir="$dl_tagged_dir"
@@ -711,32 +764,34 @@ if [[ -z "$(cd "$our_workspace/$checkout_dir"; $git tag | grep -E "^$release_ver
 then
 
   if [[ "$release_version" == "$branch.0" ]]; then
-    update_database_schema
+    run update_database_schema
   fi
 
-  update_translations
+  run update_translations
   if [[ "$with_docker" == "yes" ]]; then
-    update_dockerfile
+    run update_dockerfile
   fi
-  detect_current_version
-  detect_versionpatch_files
-  patch_version "$current_version" "$release_version"
+  run detect_current_version
+  run detect_versionpatch_files
+  run patch_version "$current_version" "$release_version"
 
-  show_release_parameters
-  commit_versionupdate
-  commit_versiontag
-  patch_version "$release_version" "$new_dev_version"
-  commit_versionupdate '
+  run show_release_parameters
+  # add the unused paramater to create a command distinct from the one below
+  run commit_versionupdate "$release_version"
+  run commit_versiontag
+  run patch_version "$release_version" "$new_dev_version"
+  # add the unused paramater to create a command distinct from the one above
+  run commit_versionupdate "$new_dev_version
 
-[skip ci]'
+[skip ci]"
 else
   tag_release="N"
 fi
 
-create_versiontarball
-sign_versiontarball
-extract_changelog
-extract_sha256sum
+run create_versiontarball
+run sign_versiontarball
+run extract_changelog
+run extract_sha256sum
 
 rm -f $release_parameter_file
 
@@ -747,15 +802,20 @@ add_release_parameter 'release_date' "$(date --iso --utc)"
 add_release_parameter 'release_sha256sums' "$extracted_sha256sums"
 add_release_parameter 'release_changelog' "$extracted_changelog"
 
-build_pod
+run build_pod
 
-staging_uuid=$($uuid)
+if [[ -z "$staging_uuid" ]]
+then
+    staging_uuid=$($uuid)
+    add_release_parameter 'staging_uuid'  "$staging_uuid"
+    append_run_state 'staging_uuid' "$staging_uuid"
+fi
 upload_staging="$dl_base_dir/../staging/$staging_uuid"
-add_release_parameter 'staging_uuid'  "$staging_uuid"
 
-stage_files_dl
+run stage_files_dl
 staged_artifact="https://download.ledgersmb.org/staging/$staging_uuid/ledgersmb-$release_version.tar.gz"
 add_release_parameter 'staged_artifact'  "$staged_artifact"
+append_run_state 'staged_artifact' "$staged_artifact"
 if [[ "$with_docker" == "yes" ]]; then
 : #    build_docker_images
 fi
@@ -784,30 +844,29 @@ fi
 
 if [[ "$tag_release" == "Y" ]]; then
     echo "Pushing changes to repository"
-    update_remote
+    run update_remote
 
     if [[ "$with_docker" == "yes" ]]
     then
         echo "Pushing docker updates"
-        update_docker_remote
+        run update_docker_remote
     fi
 fi
-publish_files_dl
+run publish_files_dl
 
 
 if [[ "$tag_release" == "Y" ]]; then
     echo "Uploading POD documentation"
-    upload_pod
+    run upload_pod
 
     # we can't upload to GitHub if there's no tag...
     echo "Updating GitHub tag with attachments"
-    publish_files_gh
-    add_release_parameter 'github_release_url' "$github_release_url"
+    run publish_files_gh
 fi
 if [[ "$with_docker" == "yes" ]]
 then
     echo "Uploading Docker images to Docker Hub and GitHub Container Repository"
-    publish_docker_images
+    run publish_docker_images
 fi
 
 
