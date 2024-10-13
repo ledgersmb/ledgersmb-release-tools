@@ -871,10 +871,6 @@ then
 fi
 
 
-
-rm -rf "$our_workspace"
-rm -rf "$docker_workspace"
-
 echo "DONE -- release successful"
 
 
