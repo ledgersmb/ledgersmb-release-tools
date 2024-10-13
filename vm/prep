@@ -4,15 +4,16 @@ set -x
 set -e
 set -o pipefail
 
-ssh-keygen -R "releaser.local" -f "$HOME/.ssh/known_hosts"
-ssh-keygen -R "$(getent hosts releaser.local | cut -f1 -d' ')" -f "$HOME/.ssh/known_hosts"
-ssh-keyscan releaser.local >>~/.ssh/known_hosts
+remote=${remote:-releaser.local}
+ssh-keygen -R "$remote" -f "$HOME/.ssh/known_hosts"
+ssh-keygen -R "$(getent hosts $remote | cut -f1 -d' ')" -f "$HOME/.ssh/known_hosts"
+ssh-keyscan $remote >>~/.ssh/known_hosts
 
 gpg_local_socket=$(gpgconf --list-dir agent-extra-socket)
-gpg_remote_socket=$(ssh releaser@releaser.local gpgconf --list-dir agent-socket)
+gpg_remote_socket=$(ssh releaser@$remote gpgconf --list-dir agent-socket)
 
-cat files/pubkey.asc | ssh releaser@releaser.local gpg --import
-ssh releaser@releaser.local <<-EOF
+cat files/pubkey.asc | ssh releaser@$remote gpg --import
+ssh releaser@$remote <<-EOF
 set -xeo pipefail
 
 # Docker, IPv6 and DNS resolution inside a VM don't seem to go well together
@@ -32,5 +33,5 @@ ln -sf ~/ledgersmb-release-tools/publish/release-ledgersmb ~/ledgersmb-release-t
 
 EOF
 
-cat ~/.ssh/known_hosts | ssh releaser@releaser.local bash -c 'cat - >>~/.ssh/known_hosts'
-ssh -R $gpg_remote_socket:$gpg_local_socket releaser@releaser.local
+cat ~/.ssh/known_hosts | ssh releaser@$remote bash -c 'cat - >>~/.ssh/known_hosts'
+ssh -R $gpg_remote_socket:$gpg_local_socket releaser@$remote
