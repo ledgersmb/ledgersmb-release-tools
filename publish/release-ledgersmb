@@ -340,6 +340,7 @@ function verify_release_key {
 
 function failure_cleanup {
     # nothing to clean up, currently
+    :
 }
 
 # 'setup_workspace' wants POSIX semantics: share traps
