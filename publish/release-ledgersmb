@@ -19,7 +19,7 @@ dl_base_dir="/www/vhosts/download.ledgersmb.org/public_html/f"
 dl_tagged_dir="Releases"
 dl_untagged_dir="Beta Releases"
 pod_base_dir="/www/vhosts/docs.ledgersmb.org/public_html/perl-api"
-tag_release="Y"
+tag_release=""
 with_docker=""
 
 
@@ -786,8 +786,9 @@ then
 
 [skip ci]"
 else
-  tag_release="N"
+  tag_release="${tag_release:-N}"
 fi
+append_run_state 'tag_release' "$tag_release"
 
 run create_versiontarball
 run sign_versiontarball
