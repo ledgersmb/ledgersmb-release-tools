@@ -269,6 +269,8 @@ load_configuration() {
         echo "Version modifier detected (rc/beta/...).
 Modified versions don't get tagged. Force tag? [y/N]"
         read tag_release
+    elif [[ -z "$tag_release" ]]; then
+        tag_release="Y"
     fi
 
     if [[ "$tag_release" == "Y" && -z "$with_docker" ]]
