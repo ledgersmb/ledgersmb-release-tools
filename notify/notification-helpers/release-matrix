@@ -31,7 +31,15 @@ say 'Topic: ' . $topic;
 
 if ($ENV{release_type} eq 'unstable') {
     if ($topic =~ m/(?<PREFIX>.*)(?<MATCH>[|] latest preview: [^|]*)(?<POSTFIX>.*)?/i) {
-        my $new_topic = $+{PREFIX} . "| latest preview: $ENV{release_version} " . ($+{POSTFIX} // '');
+        my %matches = %+;
+
+        # make POSTFIX empty string if spaces-only
+        $matches{POSTFIX} = '' if $matches{POSTFIX} =~ m/^\s*$/;
+
+        # prepend a space to separate the version and the postfix
+        $matches{POSTFIX} = ' ' . $matches{POSTFIX} if $matches{POSTFIX};
+
+        my $new_topic = $matches{PREFIX} . "| latest preview: $ENV{release_version}" . ($matches{POSTFIX} // '');
         $room->set_topic( $new_topic )->get;
     }
     else {
@@ -42,7 +50,18 @@ if ($ENV{release_type} eq 'unstable') {
 }
 else {
     if ($topic =~ m/(?<PREFIX>.*)(?<MATCH>[|] latest stable: [^|]*)(?<POSTFIX>.*)?/i) {
-        my $new_topic = $+{PREFIX} . "| latest stable: $ENV{release_version} " . ($+{POSTFIX} // '');
+        my %matches = %+;
+
+         # remove e.g. 1.12.0-rc1 when releasing 1.12.0
+        $matches{POSTFIX} = '' if $matches{POSTFIX} =~ m/\Q$ENV{release_version}-\E/;
+
+        # make POSTFIX empty string if spaces-only
+        $matches{POSTFIX} = '' if $matches{POSTFIX} =~ m/^\s*$/;
+
+        # prepend a space to separate the version and the postfix
+        $matches{POSTFIX} = ' ' . $matches{POSTFIX} if $matches{POSTFIX};
+
+        my $new_topic = $matches{PREFIX} . "| latest stable: $ENV{release_version}" . ($matches{POSTFIX} // '');
         $room->set_topic( $new_topic )->get;
     }
     else {
