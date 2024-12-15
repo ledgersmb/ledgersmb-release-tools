@@ -412,14 +412,15 @@ function update_database_schema {
     $sudo -Hiu postgres $psql -c "drop database if exists ledgersmb"
     $sudo -Hiu postgres $createdb ledgersmb
     $sudo -Hiu postgres $psql -c "alter role postgres password 'postgres'"
-    $sudo -Hiu postgres $psql -d ledgersmb < sql/Pg-database.sql
+    $sudo -Hiu postgres $psql -d ledgersmb --variable=lsmb_schema=public < sql/Pg-database.sql
+set -x
     for script in $($grep -vE '^#|^$' sql/changes/LOADORDER | $sed -e 's/!//')
     do
-        $sudo -Hiu postgres psql -d ledgersmb < sql/changes/$script
+        $sudo -Hiu postgres $psql -d ledgersmb --variable=lsmb_schema=public < sql/changes/$script
     done
     for script in $($grep -vE '^#|^$' sql/modules/LOADORDER | $sed -e 's/!//')
     do
-        $sudo -Hiu postgres $psql -d ledgersmb < sql/modules/$script
+        $sudo -Hiu postgres $psql -d ledgersmb --variable=lsmb_schema=public < sql/modules/$script
     done
 
     pushd doc/database
