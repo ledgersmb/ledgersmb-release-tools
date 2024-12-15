@@ -574,13 +574,13 @@ function build_docker_images {
     $sudo $docker buildx build \
              --progress plain \
              --platform linux/amd64,linux/arm64,linux/arm/v7 \
-             --build-arg "ARTIFACT_LOCATION=https://download.ledgersmb.org/f/Releases/$release_version/ledgersmb-$release_version.tar.gz" \
+             --build-arg "ARTIFACT_LOCATION=https://download.ledgersmb.org/f/$prj_sub_dir/$release_version/ledgersmb-$release_version.tar.gz" \
              -t ledgersmb/ledgersmb:$branch \
              -t ledgersmb/ledgersmb:$release_version \
              -t ghcr.io/ledgersmb/ledgersmb:$branch \
              -t ghcr.io/ledgersmb/ledgersmb:$release_version \
              $latest_tags \
-             $1 .
+             --push .
     popd
 }
 
@@ -614,7 +614,7 @@ function publish_docker_images {
     echo $docker_password | $sudo $docker login -u $docker_user --password-stdin
     echo $ghcr_token | $sudo $docker login ghcr.io -u $ghcr_user --password-stdin
 
-   build_docker_images --push
+   build_docker_images
 }
 
 function publish_files_dl {
@@ -823,9 +823,6 @@ then
   staged_artifact="https://download.ledgersmb.org/staging/$staging_uuid/ledgersmb-$release_version.tar.gz"
   add_release_parameter 'staged_artifact'  "$staged_artifact"
   append_run_state 'staged_artifact' "$staged_artifact"
-fi
-if [[ "$with_docker" == "yes" ]]; then
-: #    build_docker_images
 fi
 
 
