@@ -818,9 +818,12 @@ fi
 upload_staging="$dl_base_dir/../staging/$staging_uuid"
 
 run stage_files_dl
-staged_artifact="https://download.ledgersmb.org/staging/$staging_uuid/ledgersmb-$release_version.tar.gz"
-add_release_parameter 'staged_artifact'  "$staged_artifact"
-append_run_state 'staged_artifact' "$staged_artifact"
+if [ -z "$staged_artifact" ];
+then
+  staged_artifact="https://download.ledgersmb.org/staging/$staging_uuid/ledgersmb-$release_version.tar.gz"
+  add_release_parameter 'staged_artifact'  "$staged_artifact"
+  append_run_state 'staged_artifact' "$staged_artifact"
+fi
 if [[ "$with_docker" == "yes" ]]; then
 : #    build_docker_images
 fi
