@@ -18,6 +18,7 @@ release_key="B7626A90FA0F515B323C8F5C39A629558DA0AF10"
 dl_base_dir="/www/vhosts/download.ledgersmb.org/public_html/f"
 dl_tagged_dir="Releases"
 dl_untagged_dir="Beta Releases"
+dbschema_base_dir="/www/vhosts/docs.ledgersmb.org/public_html/database-schema"
 pod_base_dir="/www/vhosts/docs.ledgersmb.org/public_html/perl-api"
 tag_release=""
 with_docker=""
@@ -701,6 +702,13 @@ function upload_pod {
     popd
 }
 
+function upload_database_schema {
+    pushd "$our_workspace/$checkout_dir"
+    trap "fail \"Failed to upload database schema!\"" ERR
+    $scp -q -r doc/database lsmb-uploader@docs.ledgersmb.org:$dbschema_base_dir/$release_version
+    popd
+}
+
 function create_state_dir {
     mkdir -p "$release_data_dir/steps"
 }
@@ -768,7 +776,9 @@ if [[ -z "$(cd "$our_workspace/$checkout_dir"; $git tag | grep -E "^$release_ver
 then
 
   if [[ "$release_version" == "$branch.0" ]]; then
-    run update_database_schema
+      run update_database_schema
+      upload_database_schema="Y"
+      append_run_state 'upload_database_schema' "$upload_database_schema"
   fi
 
   run update_translations
@@ -861,12 +871,17 @@ run publish_files_dl
 
 
 if [[ "$tag_release" == "Y" ]]; then
-    echo "Uploading POD documentation"
-    run upload_pod
-
     # we can't upload to GitHub if there's no tag...
     echo "Updating GitHub tag with attachments"
     run publish_files_gh
+
+    if [[ "$upload_database_schema" == "Y" ]]; then
+        echo "Uploading database schema documentation"
+        run upload_database_schema
+    fi
+
+    echo "Uploading POD documentation"
+    run upload_pod
 fi
 if [[ "$with_docker" == "yes" ]]
 then
