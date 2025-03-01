@@ -816,6 +816,7 @@ add_release_parameter 'release_version' "$release_version"
 add_release_parameter 'release_date' "$(date --iso --utc)"
 add_release_parameter 'release_sha256sums' "$extracted_sha256sums"
 add_release_parameter 'release_changelog' "$extracted_changelog"
+add_release_parameter 'github_release_url' "$github_release_url"
 
 run build_pod
 
