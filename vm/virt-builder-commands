@@ -41,6 +41,7 @@ copy-in ./files/docker.asc:/etc/apt/keyrings/
 
 update
 install postgresql-13,nodejs,docker-ce,docker-buildx-plugin
+copy-in ./files/etc-docker/daemon.json:/etc/docker/
 
 # Java JRE is required for building Dojo on 1.4 and 1.5
 install default-jre-headless

@@ -8,7 +8,7 @@ virt-install \
     --vcpus 4 \
     --graphics vnc \
     --disk path=./tmp/releaser.qcow2,bus=virtio \
-    --network default,model=virtio \
+    --network default,model=e1000 \
     --boot hd \
     --osinfo=debian11
 
