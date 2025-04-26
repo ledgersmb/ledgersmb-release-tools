@@ -230,13 +230,16 @@ main() {
 
 main;
 
-echo "
-Please verify the following wikipedia pages manually (they did not list version numbers in the past):
+echo "Please manually announce the release through the follownig channels:
 
-   - https://es.wikipedia.org/wiki/Anexo:Software_ERP
-   - https://fr.wikipedia.org/wiki/Liste_de_progiciels_de_gestion_int%C3%A9gr%C3%A9s
+
+       https://freshcode.club/projects/ledgersmb
+       https://mastodon.social/@LedgerSMB
+       https://twitter.com/LedgerSMB
+       https://www.linkedin.com/groups/13199807/
+       https://facebook.com/LedgerSMB
+
 
 "
-
 
 exit;
