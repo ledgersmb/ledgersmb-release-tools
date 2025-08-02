@@ -575,6 +575,7 @@ function build_docker_images {
     $sudo $docker buildx build \
              --progress plain \
              --platform linux/amd64,linux/arm64,linux/arm/v7 \
+             --build-arg "ARTIFACT_PATH=https://download.ledgersmb.org/f/$prj_sub_dir/$release_version/" \
              --build-arg "ARTIFACT_LOCATION=https://download.ledgersmb.org/f/$prj_sub_dir/$release_version/ledgersmb-$release_version.tar.gz" \
              -t ledgersmb/ledgersmb:$branch \
              -t ledgersmb/ledgersmb:$release_version \
