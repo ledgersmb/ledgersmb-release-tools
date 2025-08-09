@@ -32,7 +32,7 @@ virt-builder $verbose \
      -o ./tmp/releaser.qcow2 \
      --format qcow2 \
      --arch amd64 \
-     --size 20G \
+     --size 40G \
      --commands-from-file virt-builder-commands \
      debian-12
 
