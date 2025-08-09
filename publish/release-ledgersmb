@@ -568,22 +568,20 @@ function build_docker_images {
     default_branch="$($git remote show origin | $awk '/HEAD branch/ {print $NF}' )"
     if [[ "$branch" == "$default_branch" ]]
     then
-       latest_tags="-t ledgersmb/ledgersmb:latest -t ghcr.io/ledgersmb/ledgersmb:latest"
+       SET_LATEST_TAG="Y"
+    else
+       SET_LATEST_TAG=""
     fi
 
     # $1 == '--push' or empty
     prj_url_sub_dir="$(echo "$prj_sub_dir" | sed -e 's/ /%20/')"
-    $sudo $docker buildx build \
-             --progress plain \
-             --platform linux/amd64,linux/arm64,linux/arm/v7 \
-             --build-arg "ARTIFACT_PATH=https://download.ledgersmb.org/f/$prj_url_sub_dir/$release_version/" \
-             --build-arg "ARTIFACT_LOCATION=https://download.ledgersmb.org/f/$prj_url_sub_dir/$release_version/ledgersmb-$release_version.tar.gz" \
-             -t ledgersmb/ledgersmb:$branch \
-             -t ledgersmb/ledgersmb:$release_version \
-             -t ghcr.io/ledgersmb/ledgersmb:$branch \
-             -t ghcr.io/ledgersmb/ledgersmb:$release_version \
-             $latest_tags \
-             --push .
+    $sudo BRANCH="$branch" \
+          VERSION="$release_version" \
+          ARTIFACT_PATH="https://download.ledgersmb.org/f/$prj_url_sub_dir/$release_version/" \
+          ARTIFACT_LOCATION="https://download.ledgersmb.org/f/$prj_url_sub_dir/$release_version/ledgersmb-$release_version.tar.gz" \
+          SET_LATEST_TAG="$SET_LATEST_TAG" \
+          DOCKER="$docker" \
+          ./build
     popd
 }
 
