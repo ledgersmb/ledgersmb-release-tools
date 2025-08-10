@@ -448,7 +448,7 @@ function update_dockerfile {
     trap "fail \"Failed to update Dockerfile!\"" ERR
     $sed -i -e "s/^ENV LSMB_VERSION .*\$/ENV LSMB_VERSION $release_version/
                 s/^ARG LSMB_VERSION=.*\$/ARG LSMB_VERSION=\"$release_version\"/
-                s/^ARG LSMB_DL_DIR=.*\$/ARG LSMB_DL_DIR=\"$prj_sub_dir\"/ " Dockerfile
+                s/^ARG LSMB_DL_DIR=.*\$/ARG LSMB_DL_DIR=\"$prj_sub_dir\"/ " $($find . -name Dockerfile)
     $git commit -a -m "* Automatic Dockerfile update by release process"
     $git tag "$release_version"
     popd
