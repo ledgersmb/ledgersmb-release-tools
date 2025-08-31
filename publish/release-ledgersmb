@@ -539,7 +539,10 @@ function create_versiontarball {
     pushd "$our_workspace/$checkout_dir"
     trap "fail \"Failed to create release archive!\"" ERR
     $git checkout "$release_version"
-    $make dist DIST_DIR=../ DIST_VER=$release_version
+
+    # by defining CI our release is based on the latest tested
+    # JavaScript dependencies
+    CI=yes $make dist DIST_DIR=../ DIST_VER=$release_version
     popd
 }
 
