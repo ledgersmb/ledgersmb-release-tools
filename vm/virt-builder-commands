@@ -7,6 +7,7 @@ append-line /etc/sysctl.conf:net.ipv6.conf.all.disable_ipv6=1
 run-command bash -c "debconf-set-selections <<< 'grub-pc grub-pc/install_devices multiselect /dev/sda'"
 run-command DEBIAN_FRONTEND=noninteractive dpkg-reconfigure grub-pc
 
+run-command sed -i -e 's/bookworm/trixie/' /etc/apt/sources.list
 copy-in ./files/00recommended:/etc/apt/apt.conf.d/
 
 run-command apt-get -y --allow-releaseinfo-change update
@@ -40,7 +41,7 @@ copy-in ./files/docker.asc:/etc/apt/keyrings/
 
 
 update
-install postgresql-13,nodejs,docker-ce,docker-buildx-plugin
+install postgresql-17,nodejs,docker-ce,docker-buildx-plugin
 copy-in ./files/etc-docker/daemon.json:/etc/docker/
 
 # Uglify is required for building Dojo on 1.6 and 1.7
