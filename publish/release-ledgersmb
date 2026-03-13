@@ -542,7 +542,7 @@ function create_versiontarball {
 
     # by defining CI our release is based on the latest tested
     # JavaScript dependencies
-    CI=yes $make dist DIST_DIR=../ DIST_VER=$release_version
+    CI=true $make dist DIST_DIR=../ DIST_VER=$release_version
     popd
 }
 
