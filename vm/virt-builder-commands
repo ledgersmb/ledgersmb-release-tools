@@ -42,6 +42,7 @@ copy-in ./files/docker.asc:/etc/apt/keyrings/
 
 update
 install postgresql-17,nodejs,docker-ce,docker-buildx-plugin
+run-command corepack enable
 copy-in ./files/etc-docker/daemon.json:/etc/docker/
 
 # Uglify is required for building Dojo on 1.6 and 1.7
