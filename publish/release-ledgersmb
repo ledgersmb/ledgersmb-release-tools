@@ -144,21 +144,23 @@ Usage:
    $name [options] <branch>[:<src-branch>] <version> <next-version>
 
 Parameters:
-  branch       The branch to create the release on
-  src-branch   (optional) Branch with additional commits to include
-  version      The version number of the release
-  next-version The version to set on the release branch after release
+  branch             The branch to create the release on
+  src-branch         (optional) Branch with additional commits to include
+  version            The version number of the release
+  next-version       The version to set on the release branch after release
 
 Options:
-  --addn-repo  Additional repo, in case <src-branch> is not in the main repo
-  --debug      Runs the script in debugging mode (very, very verbose)
+  --reset            Remove previous state before restarting release process
+  --src-branch-repo  Repository for <src-branch> when not the main repo
+  --docker-branch    Branch to use from docker repository, if not <branch>
+  --debug            Runs the script in debugging mode (very, very verbose)
   --force-accept-version-update
-  --with-*     Enable feature '*'
-  --without-*  Disable feature '*'
+  --with-*           Enable feature '*'
+  --without-*        Disable feature '*'
 
 Features:
-  docker       Publishes docker images
-               Tagged releases include this option; others don't
+  docker             Publishes docker images
+                     Tagged releases include this option; others don't
 
 EOF
 }
@@ -170,7 +172,7 @@ process_arguments() {
     while [[ $# -ne 0 && -z "$stop_processing" ]]
     do
         case "$1" in
-            --addn-repo)
+            --src-branch-repo)
                 addn_URL="$2"
                 shift 2
                 ;;
