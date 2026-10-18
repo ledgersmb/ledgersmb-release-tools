@@ -579,9 +579,11 @@ function build_docker_images {
     fi
 
     # $1 == '--push' or empty
+    # $PLATFORM is usually empty
     prj_url_sub_dir="$(echo "$prj_sub_dir" | sed -e 's/ /%20/')"
     $sudo BRANCH="$branch" \
           VERSION="$release_version" \
+          PLATFORM="$PLATFORM" \
           ARTIFACT_PATH="https://download.ledgersmb.org/f/$prj_url_sub_dir/$release_version/" \
           ARTIFACT_LOCATION="https://download.ledgersmb.org/f/$prj_url_sub_dir/$release_version/ledgersmb-$release_version.tar.gz" \
           SET_LATEST_TAG="$SET_LATEST_TAG" \
