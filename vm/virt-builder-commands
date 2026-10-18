@@ -53,7 +53,7 @@ run-command npm install -g i18next-conv
 run-command npm install -g vue-i18n-extract-translations
 
 # yarn is required for building 1.11
-run-command npm install -g yarn
+run-command corepack enable
 
 # 1.8+ use webpack to transpile JS, installed through npm at build time
 
