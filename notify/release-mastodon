@@ -1,0 +1,106 @@
+#!/usr/bin/perl
+
+use v5.20;
+use strict;
+use utf8;
+use warnings;
+
+use Getopt::Long;
+use JSON::PP;
+use LWP::UserAgent;
+use Digest::SHA qw(sha256_hex);
+use Encode qw(encode_utf8);
+
+binmode STDOUT, ':encoding(UTF-8)';
+
+my $instance   = $ENV{MASTODON_INSTANCE} // 'https://mastodon.social';
+my $visibility = 'public';   # public | unlisted | private | direct
+
+GetOptions(
+   'dryrun'       => \my $dryrun,
+   'visibility=s' => \$visibility,
+   'date=s'       => \(my $release_date = `date --utc +%Y-%m-%d`),
+) or die "Invalid options";
+chomp $release_date;
+
+my ($release_type, $release_version) = @ARGV;
+
+die "Script requires two arguments: ./post-mastodon [release-type] [release-version]"
+   unless defined $release_type && defined $release_version;
+
+die "Environment variable TOKEN (OAuth 2.0 access token) expected, but not defined"
+   unless defined $ENV{TOKEN} and length $ENV{TOKEN};
+
+# KEY and SECRET (client key/secret) are only needed to obtain tokens
+# through the interactive OAuth flow. An already-issued access token
+# is all that's required to call the API.
+
+my $status = do {
+  local $/;
+  <>;
+};
+chomp $status;
+
+die "Status is " . length($status) . " characters; mastodon.social allows 500"
+   if length($status) > 500;
+
+my $ua = LWP::UserAgent->new(
+    agent   => 'LedgerSMB release announcement helper; contact '
+               . ($ENV{MASTODON_CONTACT} // 'https://ledgersmb.org'),
+    timeout => 30,
+);
+$ua->default_header( Authorization => "Bearer $ENV{TOKEN}" );
+
+my $json = JSON::PP->new->utf8->canonical;
+
+# Sanity check: confirm the token is accepted before posting.
+# Requires the read:accounts (or profile) scope. If the token only
+# has write:statuses, a 403 is tolerated and we carry on.
+my $check = $ua->get("$instance/api/v1/accounts/verify_credentials");
+if ($check->is_success) {
+    my $acct = $json->decode($check->content);
+    say "Authenticated as \@$acct->{acct}";
+}
+elsif ($check->code == 401) {
+    die "Token rejected (401): " . $check->decoded_content;
+}
+elsif ($check->code == 403) {
+    say "Token lacks read scope; skipping identity check";
+}
+else {
+    die "Credential check failed: " . $check->status_line;
+}
+
+say "Status to post ($visibility):\n";
+say "$status\n";
+
+if ($dryrun) {
+    say "Dry run: nothing was posted.";
+    exit 0;
+}
+
+# The Idempotency-Key makes an accidental re-run (same version) not
+# create a duplicate post. Mastodon honours it for about an hour.
+my $idem = sha256_hex(encode_utf8("ledgersmb-release-$release_version"));
+
+my $resp = $ua->post(
+    "$instance/api/v1/statuses",
+    'Content-Type'    => 'application/json',
+    'Idempotency-Key' => $idem,
+    Content           => $json->encode({
+        status     => $status,
+        visibility => $visibility,
+        language   => 'en',
+    }),
+);
+
+if ($resp->is_success) {
+    my $post = $json->decode($resp->content);
+    say "Posted: $post->{url}";
+    exit 0;
+}
+
+say "Failed to post: " . $resp->status_line;
+say $resp->decoded_content;
+exit 1;
+
