@@ -43,36 +43,36 @@ die "Script requires two arguments: ./update-wikipedia [release-type] [release-v
 die "Release date $release_date does not follow format YYYY-MM-DD"
    unless ($release_date =~ /(?<year_full>\d\d\d\d)-(?<monthnum_full>\d\d)-(?<day_full>\d\d)/);
 
-die "Environment variables WIKI_USER and WIKI_PASSWORD expected, but not defined"
-   unless defined $ENV{WIKI_USER} and defined $ENV{WIKI_PASSWORD};
-
 my %date_components = %+;
 $date_components{isodate} = $release_date;
 
 my $bot = MediaWiki::Bot->new(
-{
- host => 'en.wikipedia.org',
- assert => 'user',
- protocol => 'https',
- agent => "LedgerSMB release version update helper; contact $ENV{WIKI_USER} for comments",
- path => 'w',
-# debug => 2,
-}
+    {
+        host     => 'en.wikipedia.org',
+        assert   => 'user',     # fail instead of editing anonymously
+        protocol => 'https',
+        agent    => "LedgerSMB release version update helper; contact "
+                    . ($ENV{WIKI_USER} // 'see https://ledgersmb.org'),
+        path     => 'w',
+        # debug  => 2,
+    }
 );
 
+# OAuth 2.0 owner-only consumer: no login call, just a bearer token
+# sent with every request. $bot->{api} is the MediaWiki::API object,
+# and its {ua} is the underlying LWP::UserAgent.
+$bot->{api}->{ua}->default_header( Authorization => "Bearer $ENV{TOKEN}" );
 
-# Due to lack of support for "clientlogin" action in the bot,
-# we'll get a warning which makes the bot think we failed. Just trust
-# everything went fine...
-if (not $bot->login(
-        {
-            username   => $ENV{WIKI_USER},
-            password   => $ENV{WIKI_PASSWORD},
-#            do_sul     => 1,
-            autoconfig => 0,
-        })) {
-    die "Login failed. Please be sure to use the correct case for the username!";
-}
+# Sanity check: confirm the token is accepted before touching any pages
+my $whoami = $bot->{api}->api({
+    action => 'query',
+    meta   => 'userinfo',
+});
+die "Token rejected or API error: "
+    . ($bot->{api}->{error}->{details} // 'unknown error')
+    unless $whoami and defined $whoami->{query}{userinfo}{id}
+                   and $whoami->{query}{userinfo}{id} > 0;
+say "Authenticated as $whoami->{query}{userinfo}{name}";
 
 my %stable_updates = (
    'en.wikipedia.org' => {
